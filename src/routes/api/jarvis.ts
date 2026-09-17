@@ -40,7 +40,7 @@ export const Route = createFileRoute("/api/jarvis")({
             role: m.role === "assistant" ? "model" : "user",
             parts: [{ text: m.content }],
           })),
-          tools: [{ google_search: {} }],
+          tools: [],
         };
 
         const res = await fetch(
