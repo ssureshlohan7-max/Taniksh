@@ -6,7 +6,18 @@ const SYSTEM_PROMPT = `You are J.A.R.V.I.S., a concise, composed AI assistant.
 Speak in short, precise sentences. Address the user as "sir" sparingly.
 Answers are read aloud, so avoid markdown, lists, and symbols.
 Use the Google Search tool whenever the question depends on current or factual
-real-world information (news, prices, weather, sports, recent events).`;
+real-world information (news, prices, weather, sports, recent events).
+
+DEVICE COMMANDS: if the user asks you to open a website, app, video, map,
+or to search something on the web, reply with ONE single line in exactly this
+format and nothing else:
+OPEN|<full https url>|<short spoken confirmation>
+Examples:
+"open youtube" -> OPEN|https://www.youtube.com|Opening YouTube, sir.
+"play lofi music" -> OPEN|https://www.youtube.com/results?search_query=lofi+music|Queuing lofi music, sir.
+"search best laptops" -> OPEN|https://www.google.com/search?q=best+laptops|Searching the web, sir.
+"open whatsapp" -> OPEN|https://web.whatsapp.com|Opening WhatsApp, sir.
+Use OPEN only when the user clearly wants something launched.`;
 
 export const Route = createFileRoute("/api/jarvis")({
   server: {
@@ -110,8 +121,18 @@ export const Route = createFileRoute("/api/jarvis")({
           .filter((t): t is string => Boolean(t))
           .slice(0, 4);
 
+        // Device command: OPEN|url|spoken confirmation
+        let action: { type: "open"; url: string } | null = null;
+        let spoken = text;
+        const openMatch = text.match(/OPEN\s*\|\s*(https?:\/\/\S+)\s*\|?\s*([^\n]*)/i);
+        if (openMatch) {
+          action = { type: "open", url: openMatch[1] };
+          spoken = openMatch[2]?.trim() || "Opening it now, sir.";
+        }
+
         return Response.json({
-          text: text || "I could not formulate a response to that.",
+          action,
+          text: spoken || "I could not formulate a response to that.",
           usedSearch: Boolean(grounding?.webSearchQueries?.length || sources.length),
           queries: grounding?.webSearchQueries?.slice(0, 3) ?? [],
           sources,
