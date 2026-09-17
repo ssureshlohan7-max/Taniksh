@@ -121,8 +121,18 @@ export const Route = createFileRoute("/api/jarvis")({
           .filter((t): t is string => Boolean(t))
           .slice(0, 4);
 
+        // Device command: OPEN|url|spoken confirmation
+        let action: { type: "open"; url: string } | null = null;
+        let spoken = text;
+        const openMatch = text.match(/OPEN\s*\|\s*(https?:\/\/\S+)\s*\|?\s*([^\n]*)/i);
+        if (openMatch) {
+          action = { type: "open", url: openMatch[1] };
+          spoken = openMatch[2]?.trim() || "Opening it now, sir.";
+        }
+
         return Response.json({
-          text: text || "I could not formulate a response to that.",
+          action,
+          text: spoken || "I could not formulate a response to that.",
           usedSearch: Boolean(grounding?.webSearchQueries?.length || sources.length),
           queries: grounding?.webSearchQueries?.slice(0, 3) ?? [],
           sources,
