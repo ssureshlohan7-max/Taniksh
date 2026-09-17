@@ -34,26 +34,39 @@ export const Route = createFileRoute("/api/jarvis")({
           return Response.json({ error: "No message provided." }, { status: 400 });
         }
 
-        const payload = {
+        const basePayload = {
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents: messages.slice(-12).map((m) => ({
             role: m.role === "assistant" ? "model" : "user",
             parts: [{ text: m.content }],
           })),
-          tools: [],
         };
 
-        const res = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
+        const callGemini = (withSearch: boolean) =>
+          fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey,
+              },
+              body: JSON.stringify(
+                withSearch
+                  ? { ...basePayload, tools: [{ google_search: {} }] }
+                  : basePayload,
+              ),
             },
-            body: JSON.stringify(payload),
-          },
-        );
+          );
+
+        // Google Search grounding requires a paid key; on free-tier keys it
+        // fails with 429, so fall back to a plain answer.
+        let res = await callGemini(true);
+        let searchAvailable = true;
+        if (res.status === 429) {
+          searchAvailable = false;
+          res = await callGemini(false);
+        }
 
         if (!res.ok) {
           const detail = await res.text();
