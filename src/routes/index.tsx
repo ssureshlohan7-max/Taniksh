@@ -7,17 +7,17 @@ import { useSpeechInput, useSpeechOutput } from "@/hooks/use-speech";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "J.A.R.V.I.S. — Voice AI Terminal" },
+      { title: "J.A.R.V.I.S. — Voice AI Command HUD" },
       {
         name: "description",
         content:
-          "A JARVIS-style voice assistant HUD: speak a question, get a searched, spoken answer on a holographic interface.",
+          "A JARVIS-style voice assistant HUD: speak a command, get spoken answers and launch any website hands-free.",
       },
-      { property: "og:title", content: "J.A.R.V.I.S. — Voice AI Terminal" },
+      { property: "og:title", content: "J.A.R.V.I.S. — Voice AI Command HUD" },
       {
         property: "og:description",
         content:
-          "Speak to JARVIS: live web-grounded answers delivered on a holographic heads-up display.",
+          "Speak to JARVIS: spoken answers and voice-launched websites on a holographic heads-up display.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -31,16 +31,28 @@ type Entry = {
   role: "user" | "assistant" | "system";
   text: string;
   trace?: string[];
+  link?: string;
 };
 
 let entryId = 0;
+
+const QUICK_LINKS = [
+  { label: "GOOGLE", url: "https://www.google.com" },
+  { label: "YOUTUBE", url: "https://www.youtube.com" },
+  { label: "WHATSAPP", url: "https://web.whatsapp.com" },
+  { label: "GMAIL", url: "https://mail.google.com" },
+  { label: "MAPS", url: "https://maps.google.com" },
+  { label: "INSTAGRAM", url: "https://www.instagram.com" },
+  { label: "SPOTIFY", url: "https://open.spotify.com" },
+  { label: "CHATGPT", url: "https://chat.openai.com" },
+];
 
 function Jarvis() {
   const [entries, setEntries] = useState<Entry[]>([
     {
       id: entryId++,
       role: "system",
-      text: "SYSTEM ONLINE. AWAITING INSTRUCTION. PRESS TALK OR TYPE BELOW.",
+      text: 'SYSTEM ONLINE. SAY "OPEN YOUTUBE" OR ASK ANYTHING.',
     },
   ]);
   const [input, setInput] = useState("");
@@ -57,6 +69,11 @@ function Jarvis() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
+  }, []);
+
+  const launch = useCallback((url: string) => {
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    return Boolean(win);
   }, []);
 
   const send = useCallback(
@@ -95,9 +112,25 @@ function Jarvis() {
           for (const s of data.sources ?? []) trace.push(s);
         }
 
+        let link: string | undefined;
+        if (data.action?.type === "open" && typeof data.action.url === "string") {
+          const opened = launch(data.action.url);
+          link = data.action.url;
+          if (!opened) {
+            setEntries((prev) => [
+              ...prev,
+              {
+                id: entryId++,
+                role: "system",
+                text: "POPUP BLOCKED — TAP THE LINK BELOW TO LAUNCH.",
+              },
+            ]);
+          }
+        }
+
         setEntries((prev) => [
           ...prev,
-          { id: entryId++, role: "assistant", text: data.text, trace },
+          { id: entryId++, role: "assistant", text: data.text, trace, link },
         ]);
         historyRef.current = [
           ...historyRef.current,
@@ -115,7 +148,7 @@ function Jarvis() {
         setThinking(false);
       }
     },
-    [speak, stopSpeaking, thinking],
+    [launch, speak, stopSpeaking, thinking],
   );
 
   const { listening, interim, supported, start, stop } = useSpeechInput(send);
@@ -134,10 +167,10 @@ function Jarvis() {
   const today = new Date();
 
   return (
-    <main className="hud-bg min-h-screen px-3 py-4 sm:px-6 sm:py-6">
-      <div className="scanlines mx-auto max-w-[110rem]">
+    <main className="hud-bg min-h-screen px-3 py-4 sm:px-6 sm:py-5">
+      <div className="mx-auto max-w-[120rem]">
         {/* top bar */}
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-primary/25 pb-3">
           <div className="flex items-center gap-4">
             <span className="text-lg tracking-[0.5em] text-primary hud-glow sm:text-2xl">
               J.A.R.V.I.S
@@ -147,20 +180,27 @@ function Jarvis() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-[0.65rem] tracking-[0.3em] text-muted-foreground">
+            <span>67.220.189.193</span>
             <span>{today.toDateString().toUpperCase()}</span>
             <span className="text-primary hud-glow">{clock}</span>
           </div>
         </header>
 
-        <div className="grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_20rem]">
+        <div className="grid gap-4 lg:grid-cols-[17rem_minmax(0,1fr)_19rem]">
           {/* left column */}
           <div className="order-2 space-y-4 lg:order-1">
             <HudPanel title="DATE">
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl text-primary hud-glow">{today.getDate()}</span>
+              <div className="flex items-center gap-4">
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-primary/40 hud-drop">
+                  <span className="absolute inset-1 rounded-full border border-dashed border-primary/25 spin-slow" />
+                  <span className="text-2xl text-primary hud-glow">{today.getDate()}</span>
+                </div>
                 <div className="text-[0.6rem] tracking-[0.25em] text-muted-foreground">
+                  <p className="text-primary">
+                    {today.toLocaleString([], { weekday: "long" }).toUpperCase()}
+                  </p>
                   <p>{today.toLocaleString([], { month: "long" }).toUpperCase()}</p>
-                  <p>{today.toLocaleString([], { weekday: "long" }).toUpperCase()}</p>
+                  <p>{today.getFullYear()}</p>
                 </div>
               </div>
             </HudPanel>
@@ -169,6 +209,7 @@ function Jarvis() {
               <Meter label="CORE" value={active ? 82 : 36} />
               <Meter label="MEMORY" value={54} />
               <Meter label="UPLINK" value={thinking ? 93 : 61} />
+              <Meter label="POWER" value={99} />
             </HudPanel>
 
             <HudPanel title="MODULES">
@@ -183,7 +224,7 @@ function Jarvis() {
 
           {/* center */}
           <div className="order-1 space-y-4 lg:order-2">
-            <div className="hud-panel px-4 py-6">
+            <div className="hud-panel relative px-4 py-8">
               <ArcReactor active={active} />
               <p className="mt-4 text-center text-xs tracking-[0.4em] text-accent sm:text-sm">
                 [ {thinking ? "PROCESSING" : status} ]
@@ -202,7 +243,7 @@ function Jarvis() {
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="hey jarvis..."
+                  placeholder="hey jarvis, open youtube..."
                   aria-label="Message JARVIS"
                   className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
@@ -236,19 +277,10 @@ function Jarvis() {
               </div>
             </form>
 
-            {!supported && (
-              <p className="text-[0.7rem] text-muted-foreground">
-                Voice input needs Chrome or Edge. Typing works everywhere.
-              </p>
-            )}
-          </div>
-
-          {/* right: transcript */}
-          <div className="order-3 lg:order-3">
-            <HudPanel title="TRANSMISSION LOG" className="h-full">
+            <HudPanel title="TRANSMISSION LOG">
               <div
                 ref={logRef}
-                className="h-[26rem] overflow-y-auto pr-1 text-[0.78rem] leading-relaxed lg:h-[34rem]"
+                className="h-[18rem] overflow-y-auto pr-1 text-[0.78rem] leading-relaxed lg:h-[22rem]"
               >
                 {entries.map((entry) => (
                   <div key={entry.id} className="mb-4">
@@ -274,6 +306,16 @@ function Jarvis() {
                         <p className="text-primary hud-glow">
                           <span className="text-hud-dim">JARVIS:</span> {entry.text}
                         </p>
+                        {entry.link && (
+                          <a
+                            href={entry.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="pl-6 text-[0.7rem] text-accent underline underline-offset-4"
+                          >
+                            └─ LAUNCH {entry.link}
+                          </a>
+                        )}
                       </div>
                     )}
                   </div>
@@ -285,6 +327,46 @@ function Jarvis() {
                     JARVIS: thinking<span className="caret">_</span>
                   </p>
                 )}
+              </div>
+            </HudPanel>
+          </div>
+
+          {/* right column */}
+          <div className="order-3 space-y-4 lg:order-3">
+            <HudPanel title="QUICK LAUNCH">
+              <ul className="grid grid-cols-2 gap-1 text-[0.65rem] tracking-[0.2em]">
+                {QUICK_LINKS.map((l) => (
+                  <li key={l.label}>
+                    <button
+                      type="button"
+                      onClick={() => launch(l.url)}
+                      className="w-full border border-primary/25 px-2 py-1 text-left text-primary/80 transition-colors hover:bg-primary hover:text-primary-foreground"
+                    >
+                      {l.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </HudPanel>
+
+            <HudPanel title="VOICE COMMANDS">
+              <ul className="space-y-1 text-[0.65rem] tracking-[0.15em] text-muted-foreground">
+                <li>&gt; open youtube</li>
+                <li>&gt; play lofi music</li>
+                <li>&gt; search best laptops</li>
+                <li>&gt; open whatsapp</li>
+                <li>&gt; what can you do</li>
+              </ul>
+            </HudPanel>
+
+            <HudPanel title="UPLINK">
+              <div className="flex items-center justify-between text-[0.65rem] tracking-[0.2em] text-muted-foreground">
+                <span>NETWORK</span>
+                <span className="text-signal">● SECURE</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[0.65rem] tracking-[0.2em] text-muted-foreground">
+                <span>LATENCY</span>
+                <span className="text-primary">{thinking ? "142 MS" : "28 MS"}</span>
               </div>
             </HudPanel>
           </div>
