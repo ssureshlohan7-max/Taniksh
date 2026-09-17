@@ -34,13 +34,10 @@ export const Route = createFileRoute("/api/jarvis")({
           return Response.json({ error: "No message provided." }, { status: 400 });
         }
 
-        const basePayload = {
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: messages.slice(-12).map((m) => ({
-            role: m.role === "assistant" ? "model" : "user",
-            parts: [{ text: m.content }],
-          })),
-        };
+        const contents = messages.slice(-12).map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        }));
 
         const callGemini = (withSearch: boolean) =>
           fetch(
@@ -51,11 +48,19 @@ export const Route = createFileRoute("/api/jarvis")({
                 "Content-Type": "application/json",
                 "x-goog-api-key": apiKey,
               },
-              body: JSON.stringify(
-                withSearch
-                  ? { ...basePayload, tools: [{ google_search: {} }] }
-                  : basePayload,
-              ),
+              body: JSON.stringify({
+                systemInstruction: {
+                  parts: [
+                    {
+                      text: withSearch
+                        ? SYSTEM_PROMPT
+                        : `${SYSTEM_PROMPT}\nYou have no search tool in this conversation. Never attempt to call one. Answer from your own knowledge, and if the answer may have changed recently, say so briefly.`,
+                    },
+                  ],
+                },
+                contents,
+                ...(withSearch ? { tools: [{ google_search: {} }] } : {}),
+              }),
             },
           );
 
