@@ -93,6 +93,9 @@ export const Route = createFileRoute("/api/jarvis")({
         };
 
         const candidate = data.candidates?.[0];
+        if (!candidate?.content?.parts?.some((p) => p.text)) {
+          console.error("Gemini empty candidate:", JSON.stringify(data).slice(0, 1500));
+        }
         const text =
           candidate?.content?.parts
             ?.map((p) => p.text ?? "")
