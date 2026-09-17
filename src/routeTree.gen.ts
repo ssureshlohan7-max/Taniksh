@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiJarvisRouteImport } from './routes/api/jarvis'
-import { Route as ApiJarvisDebugRouteImport } from './routes/api/jarvis-debug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +22,31 @@ const ApiJarvisRoute = ApiJarvisRouteImport.update({
   path: '/api/jarvis',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiJarvisDebugRoute = ApiJarvisDebugRouteImport.update({
-  id: '/api/jarvis-debug',
-  path: '/api/jarvis-debug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/jarvis': typeof ApiJarvisRoute
-  '/api/jarvis-debug': typeof ApiJarvisDebugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/jarvis': typeof ApiJarvisRoute
-  '/api/jarvis-debug': typeof ApiJarvisDebugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/jarvis': typeof ApiJarvisRoute
-  '/api/jarvis-debug': typeof ApiJarvisDebugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/jarvis' | '/api/jarvis-debug'
+  fullPaths: '/' | '/api/jarvis'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/jarvis' | '/api/jarvis-debug'
-  id: '__root__' | '/' | '/api/jarvis' | '/api/jarvis-debug'
+  to: '/' | '/api/jarvis'
+  id: '__root__' | '/' | '/api/jarvis'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiJarvisRoute: typeof ApiJarvisRoute
-  ApiJarvisDebugRoute: typeof ApiJarvisDebugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,20 +65,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiJarvisRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/jarvis-debug': {
-      id: '/api/jarvis-debug'
-      path: '/api/jarvis-debug'
-      fullPath: '/api/jarvis-debug'
-      preLoaderRoute: typeof ApiJarvisDebugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiJarvisRoute: ApiJarvisRoute,
-  ApiJarvisDebugRoute: ApiJarvisDebugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
