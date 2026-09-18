@@ -52,7 +52,7 @@ function Jarvis() {
     {
       id: entryId++,
       role: "system",
-      text: 'SYSTEM ONLINE. SAY "OPEN YOUTUBE" OR ASK ANYTHING.',
+      text: 'SYSTEM ONLINE. PRESS WAKE, THEN SAY "HEY JARVIS" FOLLOWED BY A COMMAND.',
     },
   ]);
   const [input, setInput] = useState("");
