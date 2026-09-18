@@ -235,6 +235,7 @@ function Jarvis() {
             <HudPanel title="MODULES">
               <ul className="space-y-1 text-[0.65rem] tracking-[0.2em] text-muted-foreground">
                 <Module label="MIC" on={listening} />
+                <Module label="WAKE WORD" on={wakeArmed} />
                 <Module label="WEB" on={thinking} />
                 <Module label="AI CORE" on={thinking || speaking} />
                 <Module label="VOICE" on={!muted} />
@@ -276,6 +277,18 @@ function Jarvis() {
                   className="flex-1 border border-primary/60 px-5 py-2 text-xs tracking-[0.25em] text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-40 sm:flex-none"
                 >
                   {listening ? "STOP" : "TALK"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWakeOn((v) => !v)}
+                  disabled={!wakeSupported}
+                  className={`flex-1 border px-5 py-2 text-xs tracking-[0.25em] transition-colors disabled:opacity-40 sm:flex-none ${
+                    wakeOn
+                      ? "border-accent bg-accent/15 text-accent"
+                      : "border-border text-muted-foreground hover:text-primary"
+                  }`}
+                >
+                  {wakeOn ? "WAKE ON" : "WAKE"}
                 </button>
                 <button
                   type="submit"
