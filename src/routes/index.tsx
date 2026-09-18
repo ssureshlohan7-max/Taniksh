@@ -154,6 +154,24 @@ function Jarvis() {
 
   const { listening, interim, supported, start, stop } = useSpeechInput(send);
 
+  const onWake = useCallback(
+    (command: string) => {
+      stopSpeaking();
+      if (command) {
+        void send(command);
+      } else {
+        setEntries((prev) => [
+          ...prev,
+          { id: entryId++, role: "system", text: 'WAKE WORD DETECTED — LISTENING.' },
+        ]);
+        speak("Yes, sir?");
+        start();
+      }
+    },
+    [send, speak, start, stopSpeaking],
+  );
+  const { armed: wakeArmed, supported: wakeSupported } = useWakeWord(wakeOn, onWake);
+
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [entries, interim, thinking]);
@@ -161,8 +179,9 @@ function Jarvis() {
   useEffect(() => {
     if (listening) setStatus("LISTENING");
     else if (speaking) setStatus("SPEAKING");
-    else if (!thinking) setStatus((s) => (s === "ERROR" ? s : "STANDBY"));
-  }, [listening, speaking, thinking]);
+    else if (!thinking)
+      setStatus((s) => (s === "ERROR" ? s : wakeArmed ? "AWAITING WAKE WORD" : "STANDBY"));
+  }, [listening, speaking, thinking, wakeArmed]);
 
   const active = listening || thinking || speaking;
   const today = new Date();
