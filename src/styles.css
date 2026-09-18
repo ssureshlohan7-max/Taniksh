@@ -42,7 +42,7 @@
 }
 
 :root {
-  --radius: 0.125rem;
+  --radius: 0rem;
   --font-terminal: "Share Tech Mono", "IBM Plex Mono", ui-monospace, monospace;
 
   --background: oklch(0.13 0.018 70);
