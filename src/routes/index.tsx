@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
-import { useSpeechInput, useSpeechOutput } from "@/hooks/use-speech";
+import { useSpeechInput, useSpeechOutput, useWakeWord } from "@/hooks/use-speech";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,8 +30,8 @@ type Entry = {
   id: number;
   role: "user" | "assistant" | "system";
   text: string;
-  trace?: string[];
-  link?: string;
+  trace?: string[] | undefined;
+  link?: string | undefined;
 };
 
 let entryId = 0;
@@ -52,11 +52,12 @@ function Jarvis() {
     {
       id: entryId++,
       role: "system",
-      text: 'SYSTEM ONLINE. SAY "OPEN YOUTUBE" OR ASK ANYTHING.',
+      text: 'SYSTEM ONLINE. PRESS WAKE, THEN SAY "HEY JARVIS" FOLLOWED BY A COMMAND.',
     },
   ]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [wakeOn, setWakeOn] = useState(false);
   const [status, setStatus] = useState("STANDBY");
   const [clock, setClock] = useState("--:--:--");
   const logRef = useRef<HTMLDivElement | null>(null);
@@ -153,6 +154,24 @@ function Jarvis() {
 
   const { listening, interim, supported, start, stop } = useSpeechInput(send);
 
+  const onWake = useCallback(
+    (command: string) => {
+      stopSpeaking();
+      if (command) {
+        void send(command);
+      } else {
+        setEntries((prev) => [
+          ...prev,
+          { id: entryId++, role: "system", text: 'WAKE WORD DETECTED — LISTENING.' },
+        ]);
+        speak("Yes, sir?");
+        start();
+      }
+    },
+    [send, speak, start, stopSpeaking],
+  );
+  const { armed: wakeArmed, supported: wakeSupported } = useWakeWord(wakeOn, onWake);
+
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [entries, interim, thinking]);
@@ -160,8 +179,9 @@ function Jarvis() {
   useEffect(() => {
     if (listening) setStatus("LISTENING");
     else if (speaking) setStatus("SPEAKING");
-    else if (!thinking) setStatus((s) => (s === "ERROR" ? s : "STANDBY"));
-  }, [listening, speaking, thinking]);
+    else if (!thinking)
+      setStatus((s) => (s === "ERROR" ? s : wakeArmed ? "AWAITING WAKE WORD" : "STANDBY"));
+  }, [listening, speaking, thinking, wakeArmed]);
 
   const active = listening || thinking || speaking;
   const today = new Date();
@@ -215,6 +235,7 @@ function Jarvis() {
             <HudPanel title="MODULES">
               <ul className="space-y-1 text-[0.65rem] tracking-[0.2em] text-muted-foreground">
                 <Module label="MIC" on={listening} />
+                <Module label="WAKE WORD" on={wakeArmed} />
                 <Module label="WEB" on={thinking} />
                 <Module label="AI CORE" on={thinking || speaking} />
                 <Module label="VOICE" on={!muted} />
@@ -256,6 +277,18 @@ function Jarvis() {
                   className="flex-1 border border-primary/60 px-5 py-2 text-xs tracking-[0.25em] text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-40 sm:flex-none"
                 >
                   {listening ? "STOP" : "TALK"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWakeOn((v) => !v)}
+                  disabled={!wakeSupported}
+                  className={`flex-1 border px-5 py-2 text-xs tracking-[0.25em] transition-colors disabled:opacity-40 sm:flex-none ${
+                    wakeOn
+                      ? "border-accent bg-accent/15 text-accent"
+                      : "border-border text-muted-foreground hover:text-primary"
+                  }`}
+                >
+                  {wakeOn ? "WAKE ON" : "WAKE"}
                 </button>
                 <button
                   type="submit"
