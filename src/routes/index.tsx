@@ -30,8 +30,8 @@ type Entry = {
   id: number;
   role: "user" | "assistant" | "system";
   text: string;
-  trace?: string[];
-  link?: string;
+  trace?: string[] | undefined;
+  link?: string | undefined;
 };
 
 let entryId = 0;
