@@ -125,7 +125,7 @@ export const Route = createFileRoute("/api/jarvis")({
         let action: { type: "open"; url: string } | null = null;
         let spoken = text;
         const openMatch = text.match(/OPEN\s*\|\s*(https?:\/\/\S+)\s*\|?\s*([^\n]*)/i);
-        if (openMatch) {
+        if (openMatch && openMatch[1]) {
           action = { type: "open", url: openMatch[1] };
           spoken = openMatch[2]?.trim() || "Opening it now, sir.";
         }
