@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
+import { PhotoLab } from "@/components/jarvis/PhotoLab";
 import { useSpeechInput, useSpeechOutput, useWakeWord } from "@/hooks/use-speech";
 
 export const Route = createFileRoute("/")({
@@ -381,6 +382,8 @@ function Jarvis() {
                 ))}
               </ul>
             </HudPanel>
+
+            <PhotoLab />
 
             <HudPanel title="VOICE COMMANDS">
               <ul className="space-y-1 text-[0.65rem] tracking-[0.15em] text-muted-foreground">
