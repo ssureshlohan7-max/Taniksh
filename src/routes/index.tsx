@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
-import { useSpeechInput, useSpeechOutput } from "@/hooks/use-speech";
+import { useSpeechInput, useSpeechOutput, useWakeWord } from "@/hooks/use-speech";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +57,7 @@ function Jarvis() {
   ]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [wakeOn, setWakeOn] = useState(false);
   const [status, setStatus] = useState("STANDBY");
   const [clock, setClock] = useState("--:--:--");
   const logRef = useRef<HTMLDivElement | null>(null);
