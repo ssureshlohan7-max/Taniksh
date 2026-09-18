@@ -65,7 +65,7 @@
   --input: oklch(0.42 0.08 200 / 45%);
   --ring: oklch(0.82 0.13 195);
 
-  --hud: oklch(0.85 0.13 195);
+  --hud: oklch(0.86 0.17 88);
   --hud-dim: oklch(0.55 0.06 200);
   --signal: oklch(0.8 0.18 145);
   --alert: oklch(0.78 0.17 60);
@@ -91,25 +91,25 @@
 
 @utility hud-glow {
   text-shadow:
-    0 0 6px oklch(0.85 0.13 195 / 55%),
-    0 0 18px oklch(0.85 0.13 195 / 25%);
+    0 0 6px oklch(0.86 0.17 88 / 55%),
+    0 0 18px oklch(0.86 0.17 88 / 25%);
 }
 
 @utility hud-frame {
   border: 1px solid var(--color-border);
   box-shadow:
-    inset 0 0 40px oklch(0.85 0.13 195 / 8%),
-    0 0 30px oklch(0.85 0.13 195 / 10%);
+    inset 0 0 40px oklch(0.86 0.17 88 / 8%),
+    0 0 30px oklch(0.86 0.17 88 / 10%);
   background:
-    radial-gradient(120% 90% at 50% 0%, oklch(0.24 0.05 220 / 70%), transparent 70%),
+    radial-gradient(120% 90% at 50% 0%, oklch(0.22 0.04 70 / 70%), transparent 70%),
     var(--color-background);
 }
 
 @utility scanlines {
   background-image: repeating-linear-gradient(
     to bottom,
-    oklch(0.85 0.13 195 / 5%) 0px,
-    oklch(0.85 0.13 195 / 5%) 1px,
+    oklch(0.86 0.17 88 / 5%) 0px,
+    oklch(0.86 0.17 88 / 5%) 1px,
     transparent 1px,
     transparent 4px
   );
@@ -169,25 +169,25 @@
 }
 
 @utility hud-drop {
-  filter: drop-shadow(0 0 6px oklch(0.85 0.13 195 / 45%));
+  filter: drop-shadow(0 0 6px oklch(0.86 0.17 88 / 45%));
 }
 
 @utility hud-panel {
   border: 1px solid var(--color-border);
   background:
-    linear-gradient(160deg, oklch(0.24 0.05 220 / 55%), oklch(0.18 0.03 220 / 45%));
+    linear-gradient(160deg, oklch(0.22 0.04 70 / 55%), oklch(0.13 0.02 65 / 45%));
   box-shadow:
-    inset 0 0 24px oklch(0.85 0.13 195 / 7%),
-    0 0 18px oklch(0.85 0.13 195 / 8%);
+    inset 0 0 24px oklch(0.86 0.17 88 / 7%),
+    0 0 18px oklch(0.86 0.17 88 / 8%);
   clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
 }
 
 @utility hud-bg {
   background-color: var(--background);
   background-image:
-    radial-gradient(60% 50% at 50% 45%, oklch(0.3 0.08 205 / 35%), transparent 70%),
-    radial-gradient(40% 40% at 8% 10%, oklch(0.28 0.07 200 / 25%), transparent 70%),
-    linear-gradient(oklch(0.85 0.13 195 / 4%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.85 0.13 195 / 4%) 1px, transparent 1px);
+    radial-gradient(60% 50% at 50% 45%, oklch(0.3 0.09 75 / 35%), transparent 70%),
+    radial-gradient(40% 40% at 8% 10%, oklch(0.26 0.07 60 / 25%), transparent 70%),
+    linear-gradient(oklch(0.86 0.17 88 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.86 0.17 88 / 4%) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
 }
