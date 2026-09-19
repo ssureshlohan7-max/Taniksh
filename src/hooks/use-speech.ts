@@ -11,13 +11,18 @@ type RecognitionLike = {
   onend: (() => void) | null;
 };
 
+export type SpeechLocale = "hi-IN" | "en-IN";
+
 function getRecognitionCtor(): (new () => RecognitionLike) | null {
   if (typeof window === "undefined") return null;
   const w = window as any;
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export function useSpeechInput(onFinalTranscript: (text: string) => void) {
+export function useSpeechInput(
+  onFinalTranscript: (text: string) => void,
+  language: SpeechLocale = "hi-IN",
+) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [supported, setSupported] = useState(true);
@@ -33,7 +38,7 @@ export function useSpeechInput(onFinalTranscript: (text: string) => void) {
     }
 
     const recognition = new Ctor();
-    recognition.lang = "en-US";
+    recognition.lang = language;
     recognition.interimResults = true;
     recognition.continuous = false;
 
@@ -68,7 +73,7 @@ export function useSpeechInput(onFinalTranscript: (text: string) => void) {
         /* already stopped */
       }
     };
-  }, []);
+  }, [language]);
 
   const start = useCallback(() => {
     const recognition = recognitionRef.current;
@@ -96,7 +101,11 @@ const WAKE_PATTERN = /(?:hey|ok|okay)?\s*jarvis[,.!]?\s*/i;
  * onWake(command) fires with the words spoken after the wake phrase
  * (empty string when only the wake phrase was said).
  */
-export function useWakeWord(active: boolean, onWake: (command: string) => void) {
+export function useWakeWord(
+  active: boolean,
+  onWake: (command: string) => void,
+  language: SpeechLocale = "hi-IN",
+) {
   const [supported, setSupported] = useState(true);
   const [armed, setArmed] = useState(false);
   const recognitionRef = useRef<RecognitionLike | null>(null);
@@ -130,7 +139,7 @@ export function useWakeWord(active: boolean, onWake: (command: string) => void) 
     }
 
     const recognition = new Ctor();
-    recognition.lang = "en-US";
+    recognition.lang = language;
     recognition.interimResults = false;
     recognition.continuous = true;
 
@@ -141,7 +150,8 @@ export function useWakeWord(active: boolean, onWake: (command: string) => void) 
         const transcript: string = result[0].transcript ?? "";
         const match = transcript.match(WAKE_PATTERN);
         if (match) {
-          const command = transcript.slice(match.index! + match[0].length).trim();
+          const startIndex = match.index ?? 0;
+          const command = transcript.slice(startIndex + match[0].length).trim();
           callbackRef.current(command);
         }
       }
@@ -183,12 +193,12 @@ export function useWakeWord(active: boolean, onWake: (command: string) => void) 
         /* already stopped */
       }
     };
-  }, [active]);
+  }, [active, language]);
 
   return { armed, supported };
 }
 
-export function useSpeechOutput() {
+export function useSpeechOutput(language: SpeechLocale = "hi-IN") {
   const [speaking, setSpeaking] = useState(false);
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
@@ -199,11 +209,15 @@ export function useSpeechOutput() {
     if (mutedRef.current || !text.trim()) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
-    utterance.pitch = 0.9;
-    const preferred = window.speechSynthesis
-      .getVoices()
-      .find((v) => /uk english male|daniel|google uk english male/i.test(v.name));
+    utterance.lang = language;
+    utterance.rate = language === "hi-IN" ? 0.9 : 0.96;
+    utterance.pitch = language === "hi-IN" ? 0.86 : 0.9;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred =
+      voices.find((voice) => voice.lang.toLowerCase() === language.toLowerCase()) ??
+      voices.find((voice) => language === "hi-IN" && /^hi(?:-|_)/i.test(voice.lang)) ??
+      voices.find((voice) => /google hindi|हिन्दी|hindi|hemant|kalpana/i.test(voice.name)) ??
+      voices.find((voice) => /india|rishi|veena/i.test(`${voice.name} ${voice.lang}`));
     if (preferred) utterance.voice = preferred;
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);

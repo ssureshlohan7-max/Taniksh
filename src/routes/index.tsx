@@ -3,7 +3,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
 import { PhotoLab } from "@/components/jarvis/PhotoLab";
-import { useSpeechInput, useSpeechOutput, useWakeWord } from "@/hooks/use-speech";
+import { Button } from "@/components/ui/button";
+import {
+  useSpeechInput,
+  useSpeechOutput,
+  useWakeWord,
+  type SpeechLocale,
+} from "@/hooks/use-speech";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,11 +66,12 @@ function Jarvis() {
   const [thinking, setThinking] = useState(false);
   const [wakeOn, setWakeOn] = useState(false);
   const [status, setStatus] = useState("STANDBY");
+  const [speechLocale, setSpeechLocale] = useState<SpeechLocale>("hi-IN");
   const [clock, setClock] = useState("--:--:--");
   const logRef = useRef<HTMLDivElement | null>(null);
   const historyRef = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
 
-  const { speak, stopSpeaking, speaking, muted, setMuted } = useSpeechOutput();
+  const { speak, stopSpeaking, speaking, muted, setMuted } = useSpeechOutput(speechLocale);
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString([], { hour12: false }));
@@ -94,7 +101,7 @@ function Jarvis() {
         const res = await fetch("/api/jarvis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: historyRef.current }),
+          body: JSON.stringify({ messages: historyRef.current, locale: speechLocale }),
         });
         const data = await res.json();
 
@@ -150,10 +157,10 @@ function Jarvis() {
         setThinking(false);
       }
     },
-    [launch, speak, stopSpeaking, thinking],
+    [launch, speak, speechLocale, stopSpeaking, thinking],
   );
 
-  const { listening, interim, supported, start, stop } = useSpeechInput(send);
+  const { listening, interim, supported, start, stop } = useSpeechInput(send, speechLocale);
 
   const onWake = useCallback(
     (command: string) => {
@@ -165,13 +172,17 @@ function Jarvis() {
           ...prev,
           { id: entryId++, role: "system", text: 'WAKE WORD DETECTED — LISTENING.' },
         ]);
-        speak("Yes, sir?");
+        speak(speechLocale === "hi-IN" ? "हाँ जी, बताओ।" : "Yes, sir?");
         start();
       }
     },
-    [send, speak, start, stopSpeaking],
+    [send, speak, speechLocale, start, stopSpeaking],
   );
-  const { armed: wakeArmed, supported: wakeSupported } = useWakeWord(wakeOn, onWake);
+  const { armed: wakeArmed, supported: wakeSupported } = useWakeWord(
+    wakeOn,
+    onWake,
+    speechLocale,
+  );
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
@@ -188,7 +199,8 @@ function Jarvis() {
   const today = new Date();
 
   return (
-    <main className="hud-bg min-h-screen px-3 py-4 sm:px-6 sm:py-5">
+    <main className="hud-bg hud-shell min-h-screen overflow-hidden px-3 py-4 sm:px-6 sm:py-5">
+      <div aria-hidden="true" className="telemetry-sweep" />
       <div className="mx-auto max-w-[120rem]">
         {/* top bar */}
         <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-primary/25 pb-3">
@@ -201,6 +213,7 @@ function Jarvis() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-[0.65rem] tracking-[0.3em] text-muted-foreground">
+            <span className="hidden text-signal md:inline">MK.VII // ONLINE</span>
             <span>67.220.189.193</span>
             <span>{today.toDateString().toUpperCase()}</span>
             <span className="text-primary hud-glow">{clock}</span>
@@ -242,11 +255,45 @@ function Jarvis() {
                 <Module label="VOICE" on={!muted} />
               </ul>
             </HudPanel>
+
+            <div className="command-deck px-3 py-3">
+              <div className="mb-2 flex items-center justify-between text-[0.6rem] tracking-[0.2em]">
+                <span className="text-hud-dim">VOICE DIALECT</span>
+                <span className="text-signal">● LINKED</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                <Button
+                  type="button"
+                  variant={speechLocale === "hi-IN" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSpeechLocale("hi-IN")}
+                  className="rounded-none text-[0.6rem] tracking-[0.15em]"
+                >
+                  हरियाणवी
+                </Button>
+                <Button
+                  type="button"
+                  variant={speechLocale === "en-IN" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSpeechLocale("en-IN")}
+                  className="rounded-none text-[0.6rem] tracking-[0.15em]"
+                >
+                  ENGLISH
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* center */}
           <div className="order-1 space-y-4 lg:order-2">
-            <div className="hud-panel relative px-4 py-8">
+            <div className="hud-panel relative overflow-hidden px-4 py-8">
+              <div className="absolute left-4 top-4 text-[0.55rem] tracking-[0.22em] text-hud-dim">
+                TARGET // VOICE CORE
+              </div>
+              <div className="absolute right-4 top-4 text-right text-[0.55rem] leading-relaxed tracking-[0.18em] text-hud-dim">
+                <p>SYNC 99.8%</p>
+                <p className="text-signal">DIALECT {speechLocale === "hi-IN" ? "HR-IN" : "EN-IN"}</p>
+              </div>
               <ArcReactor active={active} />
               <p className="mt-4 text-center text-xs tracking-[0.4em] text-accent sm:text-sm">
                 [ {thinking ? "PROCESSING" : status} ]
@@ -271,43 +318,51 @@ function Jarvis() {
                 />
               </div>
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={listening ? stop : start}
                   disabled={!supported}
-                  className="flex-1 border border-primary/60 px-5 py-2 text-xs tracking-[0.25em] text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-40 sm:flex-none"
+                  className="flex-1 rounded-none border-primary/60 px-5 text-xs tracking-[0.25em] text-primary sm:flex-none"
                 >
                   {listening ? "STOP" : "TALK"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => setWakeOn((v) => !v)}
                   disabled={!wakeSupported}
-                  className={`flex-1 border px-5 py-2 text-xs tracking-[0.25em] transition-colors disabled:opacity-40 sm:flex-none ${
+                  className={`flex-1 rounded-none px-5 text-xs tracking-[0.25em] sm:flex-none ${
                     wakeOn
                       ? "border-accent bg-accent/15 text-accent"
                       : "border-border text-muted-foreground hover:text-primary"
                   }`}
                 >
                   {wakeOn ? "WAKE ON" : "WAKE"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="outline"
+                  size="sm"
                   disabled={thinking}
-                  className="flex-1 border border-border px-5 py-2 text-xs tracking-[0.25em] text-foreground transition-colors hover:bg-secondary disabled:opacity-40 sm:flex-none"
+                  className="flex-1 rounded-none border-border px-5 text-xs tracking-[0.25em] text-foreground sm:flex-none"
                 >
                   SEND
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     if (!muted) stopSpeaking();
                     setMuted(!muted);
                   }}
-                  className="border border-border px-4 py-2 text-xs tracking-[0.25em] text-muted-foreground hover:text-primary"
+                  className="rounded-none border-border px-4 text-xs tracking-[0.25em] text-muted-foreground hover:text-primary"
                 >
                   {muted ? "MUTED" : "VOICE"}
-                </button>
+                </Button>
               </div>
             </form>
 
@@ -371,13 +426,15 @@ function Jarvis() {
               <ul className="grid grid-cols-2 gap-1 text-[0.65rem] tracking-[0.2em]">
                 {QUICK_LINKS.map((l) => (
                   <li key={l.label}>
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => launch(l.url)}
-                      className="w-full border border-primary/25 px-2 py-1 text-left text-primary/80 transition-colors hover:bg-primary hover:text-primary-foreground"
+                      className="h-7 w-full justify-start rounded-none border-primary/25 px-2 text-[0.6rem] text-primary/80 hover:bg-primary hover:text-primary-foreground"
                     >
                       {l.label}
-                    </button>
+                    </Button>
                   </li>
                 ))}
               </ul>
@@ -387,11 +444,11 @@ function Jarvis() {
 
             <HudPanel title="VOICE COMMANDS">
               <ul className="space-y-1 text-[0.65rem] tracking-[0.15em] text-muted-foreground">
-                <li>&gt; open youtube</li>
-                <li>&gt; play lofi music</li>
-                <li>&gt; search best laptops</li>
-                <li>&gt; open whatsapp</li>
-                <li>&gt; what can you do</li>
+                <li>&gt; यूट्यूब खोल दे</li>
+                <li>&gt; गाना चला दे</li>
+                <li>&gt; आज मौसम के सै</li>
+                <li>&gt; व्हाट्सऐप खोल</li>
+                <li>&gt; तू के कर सके सै</li>
               </ul>
             </HudPanel>
 

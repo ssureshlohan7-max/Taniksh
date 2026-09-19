@@ -5,6 +5,11 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 const SYSTEM_PROMPT = `You are J.A.R.V.I.S., a concise, composed AI assistant.
 Speak in short, precise sentences. Address the user as "sir" sparingly.
 Answers are read aloud, so avoid markdown, lists, and symbols.
+LANGUAGE: Understand Hindi, Hinglish, and natural Haryanvi. When the user speaks
+in Hindi, Hinglish, or Haryanvi, reply in short, natural देसी Haryanvi written
+in Devanagari. Keep it respectful and easy to understand; use forms like
+"के", "सै", "तेरे ताईं", and "ठीक सै" naturally, never as a caricature.
+When the user speaks English, answer in English.
 Use the Google Search tool whenever the question depends on current or factual
 real-world information (news, prices, weather, sports, recent events).
 
@@ -31,7 +36,7 @@ export const Route = createFileRoute("/api/jarvis")({
           );
         }
 
-        let body: { messages?: ChatMessage[] };
+        let body: { messages?: ChatMessage[]; locale?: "hi-IN" | "en-IN" };
         try {
           body = await request.json();
         } catch {
@@ -50,6 +55,11 @@ export const Route = createFileRoute("/api/jarvis")({
           parts: [{ text: m.content }],
         }));
 
+        const languageInstruction =
+          body.locale === "hi-IN"
+            ? "Voice mode is Haryanvi/Hindi. Reply in natural, concise Haryanvi using Devanagari unless the user clearly requests another language."
+            : "Voice mode is English. Reply in concise natural English unless the user requests another language.";
+
         const callGemini = (withSearch: boolean) =>
           fetch(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
@@ -64,8 +74,8 @@ export const Route = createFileRoute("/api/jarvis")({
                   parts: [
                     {
                       text: withSearch
-                        ? SYSTEM_PROMPT
-                        : `${SYSTEM_PROMPT}\nYou have no search tool in this conversation. Never attempt to call one. Answer from your own knowledge, and if the answer may have changed recently, say so briefly.`,
+                        ? `${SYSTEM_PROMPT}\n${languageInstruction}`
+                        : `${SYSTEM_PROMPT}\n${languageInstruction}\nYou have no search tool in this conversation. Never attempt to call one. Answer from your own knowledge, and if the answer may have changed recently, say so briefly.`,
                     },
                   ],
                 },

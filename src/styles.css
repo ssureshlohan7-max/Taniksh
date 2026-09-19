@@ -37,6 +37,8 @@
   --color-hud-dim: var(--hud-dim);
   --color-signal: var(--signal);
   --color-alert: var(--alert);
+  --color-panel-edge: var(--panel-edge);
+  --color-void: var(--void);
   --font-mono: var(--font-terminal);
   --font-sans: var(--font-terminal);
 }
@@ -69,6 +71,8 @@
   --hud-dim: oklch(0.58 0.08 80);
   --signal: oklch(0.85 0.18 95);
   --alert: oklch(0.65 0.21 32);
+  --panel-edge: oklch(0.76 0.15 83 / 72%);
+  --void: oklch(0.07 0.012 62);
 }
 
 .dark {
@@ -103,6 +107,62 @@
   background:
     radial-gradient(120% 90% at 50% 0%, oklch(0.22 0.04 70 / 70%), transparent 70%),
     var(--color-background);
+}
+
+@utility hud-shell {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+    background: linear-gradient(90deg, transparent 0 49.8%, oklch(0.85 0.17 88 / 5%) 50%, transparent 50.2%);
+  }
+  &::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 21;
+    box-shadow: inset 0 0 110px oklch(0.03 0.01 70 / 92%);
+  }
+}
+
+@utility command-deck {
+  position: relative;
+  border-block: 1px solid var(--color-border);
+  background: linear-gradient(90deg, transparent, oklch(0.85 0.17 88 / 7%) 45%, transparent);
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    width: 18px;
+    border-block: 1px solid var(--color-primary);
+  }
+  &::before { left: 0; border-left: 2px solid var(--color-primary); }
+  &::after { right: 0; border-right: 2px solid var(--color-primary); }
+}
+
+@keyframes telemetry-sweep {
+  0% { transform: translateY(-120%); opacity: 0; }
+  12%, 80% { opacity: 0.45; }
+  100% { transform: translateY(120vh); opacity: 0; }
+}
+
+@utility telemetry-sweep {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 19;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  box-shadow: 0 0 14px var(--color-primary);
+  animation: telemetry-sweep 8s linear infinite;
 }
 
 @utility scanlines {
@@ -180,14 +240,34 @@
     inset 0 0 24px oklch(0.86 0.17 88 / 7%),
     0 0 18px oklch(0.86 0.17 88 / 8%);
   clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    inset: 5px;
+    border-top: 1px solid oklch(0.86 0.17 88 / 16%);
+    border-right: 1px solid oklch(0.86 0.17 88 / 9%);
+  }
 }
 
 @utility hud-bg {
   background-color: var(--background);
   background-image:
-    radial-gradient(60% 50% at 50% 45%, oklch(0.3 0.09 75 / 35%), transparent 70%),
+    radial-gradient(60% 50% at 50% 32%, oklch(0.3 0.09 75 / 40%), transparent 70%),
     radial-gradient(40% 40% at 8% 10%, oklch(0.26 0.07 60 / 25%), transparent 70%),
     linear-gradient(oklch(0.86 0.17 88 / 4%) 1px, transparent 1px),
     linear-gradient(90deg, oklch(0.86 0.17 88 / 4%) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+}
+
+@utility tech-label {
+  border-left: 2px solid var(--color-primary);
+  background: linear-gradient(90deg, oklch(0.85 0.17 88 / 12%), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-slow, .spin-med, .spin-rev, .spin-rev-slow, .reactor, .telemetry-sweep {
+    animation: none;
+  }
 }
