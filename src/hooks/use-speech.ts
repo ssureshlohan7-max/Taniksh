@@ -73,7 +73,7 @@ export function useSpeechInput(
         /* already stopped */
       }
     };
-  }, []);
+  }, [language]);
 
   const start = useCallback(() => {
     const recognition = recognitionRef.current;
@@ -84,7 +84,7 @@ export function useSpeechInput(
     } catch {
       /* already running */
     }
-  }, [language]);
+  }, []);
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop();
