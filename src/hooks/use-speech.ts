@@ -73,7 +73,7 @@ export function useSpeechInput(
         /* already stopped */
       }
     };
-  }, [language]);
+  }, []);
 
   const start = useCallback(() => {
     const recognition = recognitionRef.current;
@@ -94,7 +94,7 @@ export function useSpeechInput(
   return { listening, interim, supported, start, stop };
 }
 
-const WAKE_PATTERN = /(?:hey|ok|okay)?\s*jarvis[,.!]?\s*/i;
+const WAKE_PATTERN = /(?:(?:hey|ok|okay)\s*jarvis|(?:हे|ओके|ओक)\s*(?:जार्विस|जारविस)|(?:जार्विस|जारविस))[,।.!]?\s*/i;
 
 /**
  * Continuously listens for the wake phrase "hey jarvis".
@@ -223,7 +223,7 @@ export function useSpeechOutput(language: SpeechLocale = "hi-IN") {
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [language]);
 
   const stopSpeaking = useCallback(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
