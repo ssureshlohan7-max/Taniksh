@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { HudPanel } from "./HudPanel";
+import { Button } from "@/components/ui/button";
 
 export function PhotoLab() {
   const [file, setFile] = useState<File | null>(null);
@@ -48,21 +49,25 @@ export function PhotoLab() {
         onChange={(e) => pick(e.target.files?.[0] ?? null)}
       />
       <div className="flex gap-2">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => inputRef.current?.click()}
-          className="flex-1 border border-primary/50 px-2 py-1 text-[0.6rem] tracking-[0.2em] text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          className="flex-1 rounded-none border-primary/50 px-2 text-[0.6rem] tracking-[0.2em] text-primary hover:bg-primary hover:text-primary-foreground"
         >
           {file ? "CHANGE PHOTO" : "CAPTURE / UPLOAD"}
-        </button>
+        </Button>
         {file && (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => pick(null)}
-            className="border border-border px-2 py-1 text-[0.6rem] tracking-[0.2em] text-muted-foreground hover:text-accent"
+            className="rounded-none border-border px-2 text-[0.6rem] tracking-[0.2em] text-muted-foreground hover:text-accent"
           >
             CLEAR
-          </button>
+          </Button>
         )}
       </div>
 
@@ -82,14 +87,16 @@ export function PhotoLab() {
         className="mt-2 w-full border border-border bg-transparent px-2 py-1 text-[0.7rem] text-foreground outline-none placeholder:text-muted-foreground"
       />
 
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={() => void run()}
         disabled={busy}
-        className="mt-2 w-full border border-accent/70 bg-accent/10 px-2 py-1 text-[0.6rem] tracking-[0.25em] text-accent transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-40"
+        className="mt-2 w-full rounded-none border-accent/70 bg-accent/10 px-2 text-[0.6rem] tracking-[0.25em] text-accent hover:bg-accent hover:text-accent-foreground"
       >
         {busy ? "RENDERING..." : file ? "EDIT PHOTO" : "GENERATE"}
-      </button>
+      </Button>
 
       {error && <p className="mt-2 text-[0.6rem] tracking-[0.15em] text-destructive">:: {error}</p>}
 
