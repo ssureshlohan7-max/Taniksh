@@ -4,6 +4,7 @@ import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
 import { PhotoLab } from "@/components/jarvis/PhotoLab";
 import { Button } from "@/components/ui/button";
+import { resolveLocalCommand } from "@/lib/commands";
 import {
   useSpeechInput,
   useSpeechOutput,
