@@ -502,6 +502,10 @@ function Jarvis() {
                 <li>&gt; आज मौसम के सै</li>
                 <li>&gt; व्हाट्सऐप खोल</li>
                 <li>&gt; तू के कर सके सै</li>
+                <li>&gt; fullscreen / फुल स्क्रीन</li>
+                <li>&gt; battery / बैटरी</li>
+                <li>&gt; vibrate / वाइब्रेट</li>
+                <li>&gt; keep screen on</li>
               </ul>
             </HudPanel>
 
