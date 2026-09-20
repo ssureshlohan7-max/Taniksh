@@ -4,6 +4,7 @@ import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
 import { PhotoLab } from "@/components/jarvis/PhotoLab";
 import { Button } from "@/components/ui/button";
+import { resolveLocalCommand } from "@/lib/commands";
 import {
   useSpeechInput,
   useSpeechOutput,
@@ -81,8 +82,21 @@ function Jarvis() {
   }, []);
 
   const launch = useCallback((url: string) => {
-    const win = window.open(url, "_blank", "noopener,noreferrer");
-    return Boolean(win);
+    try {
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      if (win) return true;
+      // Fallback: synthetic anchor click (allowed inside user-gesture handlers)
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return true;
+    } catch {
+      return false;
+    }
   }, []);
 
   const send = useCallback(
@@ -94,8 +108,47 @@ function Jarvis() {
       setEntries((prev) => [...prev, { id: entryId++, role: "user", text: query }]);
       historyRef.current = [...historyRef.current, { role: "user", content: query }];
       setInput("");
+
+      // Handle launches and device controls locally — instant and never fails
+      // because of an AI hiccup.
+      const local = resolveLocalCommand(query);
+      if (local) {
+        if (local.kind === "open") {
+          const opened = launch(local.url);
+          setEntries((prev) => [
+            ...prev,
+            {
+              id: entryId++,
+              role: "assistant",
+              text: local.spoken,
+              link: opened ? undefined : local.url,
+            },
+          ]);
+          if (!opened) {
+            setEntries((prev) => [
+              ...prev,
+              { id: entryId++, role: "system", text: "TAP THE LINK BELOW TO LAUNCH." },
+            ]);
+          }
+        } else {
+          await local.run();
+          setEntries((prev) => [
+            ...prev,
+            { id: entryId++, role: "assistant", text: local.spoken },
+          ]);
+        }
+        historyRef.current = [
+          ...historyRef.current,
+          { role: "assistant", content: local.spoken },
+        ];
+        speak(local.spoken);
+        setStatus("READY");
+        return;
+      }
+
       setThinking(true);
       setStatus("PROCESSING");
+
 
       try {
         const res = await fetch("/api/jarvis", {
@@ -400,9 +453,9 @@ function Jarvis() {
                             href={entry.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="pl-6 text-[0.7rem] text-accent underline underline-offset-4"
+                            className="mt-2 inline-block border border-accent bg-accent/15 px-4 py-2 text-[0.7rem] tracking-[0.25em] text-accent hover:bg-accent hover:text-background"
                           >
-                            └─ LAUNCH {entry.link}
+                            ▶ TAP TO OPEN
                           </a>
                         )}
                       </div>
@@ -449,6 +502,10 @@ function Jarvis() {
                 <li>&gt; आज मौसम के सै</li>
                 <li>&gt; व्हाट्सऐप खोल</li>
                 <li>&gt; तू के कर सके सै</li>
+                <li>&gt; fullscreen / फुल स्क्रीन</li>
+                <li>&gt; battery / बैटरी</li>
+                <li>&gt; vibrate / वाइब्रेट</li>
+                <li>&gt; keep screen on</li>
               </ul>
             </HudPanel>
 
