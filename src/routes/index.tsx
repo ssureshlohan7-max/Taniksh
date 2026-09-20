@@ -453,9 +453,9 @@ function Jarvis() {
                             href={entry.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="pl-6 text-[0.7rem] text-accent underline underline-offset-4"
+                            className="mt-2 inline-block border border-accent bg-accent/15 px-4 py-2 text-[0.7rem] tracking-[0.25em] text-accent hover:bg-accent hover:text-background"
                           >
-                            └─ LAUNCH {entry.link}
+                            ▶ TAP TO OPEN
                           </a>
                         )}
                       </div>
