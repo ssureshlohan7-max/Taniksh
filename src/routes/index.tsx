@@ -81,8 +81,21 @@ function Jarvis() {
   }, []);
 
   const launch = useCallback((url: string) => {
-    const win = window.open(url, "_blank", "noopener,noreferrer");
-    return Boolean(win);
+    try {
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      if (win) return true;
+      // Fallback: synthetic anchor click (allowed inside user-gesture handlers)
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return true;
+    } catch {
+      return false;
+    }
   }, []);
 
   const send = useCallback(
@@ -94,8 +107,47 @@ function Jarvis() {
       setEntries((prev) => [...prev, { id: entryId++, role: "user", text: query }]);
       historyRef.current = [...historyRef.current, { role: "user", content: query }];
       setInput("");
+
+      // Handle launches and device controls locally — instant and never fails
+      // because of an AI hiccup.
+      const local = resolveLocalCommand(query);
+      if (local) {
+        if (local.kind === "open") {
+          const opened = launch(local.url);
+          setEntries((prev) => [
+            ...prev,
+            {
+              id: entryId++,
+              role: "assistant",
+              text: local.spoken,
+              link: opened ? undefined : local.url,
+            },
+          ]);
+          if (!opened) {
+            setEntries((prev) => [
+              ...prev,
+              { id: entryId++, role: "system", text: "TAP THE LINK BELOW TO LAUNCH." },
+            ]);
+          }
+        } else {
+          await local.run();
+          setEntries((prev) => [
+            ...prev,
+            { id: entryId++, role: "assistant", text: local.spoken },
+          ]);
+        }
+        historyRef.current = [
+          ...historyRef.current,
+          { role: "assistant", content: local.spoken },
+        ];
+        speak(local.spoken);
+        setStatus("READY");
+        return;
+      }
+
       setThinking(true);
       setStatus("PROCESSING");
+
 
       try {
         const res = await fetch("/api/jarvis", {
