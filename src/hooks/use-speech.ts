@@ -198,7 +198,10 @@ export function useWakeWord(
   return { armed, supported };
 }
 
-export function useSpeechOutput(language: SpeechLocale = "hi-IN") {
+export function useSpeechOutput(
+  language: SpeechLocale = "hi-IN",
+  options?: { voiceURI?: string | null; rate?: number; pitch?: number },
+) {
   const [speaking, setSpeaking] = useState(false);
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
@@ -210,10 +213,11 @@ export function useSpeechOutput(language: SpeechLocale = "hi-IN") {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = language;
-    utterance.rate = language === "hi-IN" ? 0.9 : 0.96;
-    utterance.pitch = language === "hi-IN" ? 0.86 : 0.9;
+    utterance.rate = options?.rate ?? (language === "hi-IN" ? 0.9 : 0.96);
+    utterance.pitch = options?.pitch ?? (language === "hi-IN" ? 0.86 : 0.9);
     const voices = window.speechSynthesis.getVoices();
     const preferred =
+      voices.find((voice) => voice.voiceURI === options?.voiceURI) ??
       voices.find((voice) => voice.lang.toLowerCase() === language.toLowerCase()) ??
       voices.find((voice) => language === "hi-IN" && /^hi(?:-|_)/i.test(voice.lang)) ??
       voices.find((voice) => /google hindi|हिन्दी|hindi|hemant|kalpana/i.test(voice.name)) ??
@@ -223,7 +227,7 @@ export function useSpeechOutput(language: SpeechLocale = "hi-IN") {
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utterance);
-  }, [language]);
+  }, [language, options?.pitch, options?.rate, options?.voiceURI]);
 
   const stopSpeaking = useCallback(() => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {

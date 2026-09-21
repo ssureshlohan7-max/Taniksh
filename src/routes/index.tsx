@@ -3,8 +3,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
 import { PhotoLab } from "@/components/jarvis/PhotoLab";
+import { SettingsPanel } from "@/components/jarvis/SettingsPanel";
 import { Button } from "@/components/ui/button";
 import { resolveLocalCommand } from "@/lib/commands";
+import {
+  DEFAULT_SETTINGS,
+  applyTheme,
+  loadSettings,
+  matchShortcut,
+  saveSettings,
+  type JarvisSettings,
+} from "@/lib/settings";
 import {
   useSpeechInput,
   useSpeechOutput,
@@ -68,11 +77,33 @@ function Jarvis() {
   const [wakeOn, setWakeOn] = useState(false);
   const [status, setStatus] = useState("STANDBY");
   const [speechLocale, setSpeechLocale] = useState<SpeechLocale>("hi-IN");
+  const [settings, setSettings] = useState<JarvisSettings>(DEFAULT_SETTINGS);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [clock, setClock] = useState("--:--:--");
   const logRef = useRef<HTMLDivElement | null>(null);
   const historyRef = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
 
-  const { speak, stopSpeaking, speaking, muted, setMuted } = useSpeechOutput(speechLocale);
+  const { speak, stopSpeaking, speaking, muted, setMuted } = useSpeechOutput(speechLocale, {
+    voiceURI: settings.voiceURI,
+    rate: settings.rate,
+    pitch: settings.pitch,
+  });
+
+  useEffect(() => {
+    const saved = loadSettings();
+    setSettings(saved);
+    applyTheme(saved.theme);
+  }, []);
+
+  const updateSettings = useCallback((next: JarvisSettings) => {
+    setSettings(next);
+    saveSettings(next);
+    applyTheme(next.theme);
+  }, []);
+
+  const resetSettings = useCallback(() => {
+    updateSettings(DEFAULT_SETTINGS);
+  }, [updateSettings]);
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString([], { hour12: false }));
@@ -111,7 +142,10 @@ function Jarvis() {
 
       // Handle launches and device controls locally — instant and never fails
       // because of an AI hiccup.
-      const local = resolveLocalCommand(query);
+      const shortcut = matchShortcut(query, settings.shortcuts);
+      const local = shortcut
+        ? { kind: "open" as const, url: shortcut.url, spoken: `Opening ${shortcut.phrase}.` }
+        : resolveLocalCommand(query);
       if (local) {
         if (local.kind === "open") {
           const opened = launch(local.url);
@@ -154,7 +188,11 @@ function Jarvis() {
         const res = await fetch("/api/jarvis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: historyRef.current, locale: speechLocale }),
+          body: JSON.stringify({
+            messages: historyRef.current,
+            locale: speechLocale,
+            personality: settings.personality,
+          }),
         });
         const data = await res.json();
 
@@ -210,7 +248,7 @@ function Jarvis() {
         setThinking(false);
       }
     },
-    [launch, speak, speechLocale, stopSpeaking, thinking],
+    [launch, settings.personality, settings.shortcuts, speak, speechLocale, stopSpeaking, thinking],
   );
 
   const { listening, interim, supported, start, stop } = useSpeechInput(send, speechLocale);
@@ -252,20 +290,38 @@ function Jarvis() {
   const today = new Date();
 
   return (
-    <main className="hud-bg hud-shell min-h-screen overflow-hidden px-3 py-4 sm:px-6 sm:py-5">
+    <main className="hud-bg hud-shell relative min-h-screen overflow-hidden px-3 py-4 sm:px-6 sm:py-5">
+      {settings.bgImage && (
+        <img
+          src={settings.bgImage}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 h-full w-full object-cover"
+          style={{ opacity: Math.max(0, Math.min(1, (100 - settings.bgDim) / 100)) }}
+        />
+      )}
       <div aria-hidden="true" className="telemetry-sweep" />
-      <div className="mx-auto max-w-[120rem]">
+      <div className="relative mx-auto max-w-[120rem]">
         {/* top bar */}
         <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-primary/25 pb-3">
           <div className="flex items-center gap-4">
             <span className="text-lg tracking-[0.5em] text-primary hud-glow sm:text-2xl">
-              J.A.R.V.I.S
+              {settings.name}
             </span>
             <span className="hidden text-[0.6rem] tracking-[0.35em] text-hud-dim sm:inline">
               JUST A RATHER VERY INTELLIGENT SYSTEM
             </span>
           </div>
-          <div className="flex items-center gap-4 text-[0.65rem] tracking-[0.3em] text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-end gap-3 text-[0.65rem] tracking-[0.3em] text-muted-foreground">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSettingsOpen(true)}
+              className="rounded-none border-primary/60 px-3 text-[0.6rem] tracking-[0.22em] text-primary"
+            >
+              SETTINGS
+            </Button>
             <span className="hidden text-signal md:inline">MK.VII // ONLINE</span>
             <span>67.220.189.193</span>
             <span>{today.toDateString().toUpperCase()}</span>
@@ -524,6 +580,14 @@ function Jarvis() {
           </div>
         </div>
       </div>
+      {settingsOpen && (
+        <SettingsPanel
+          settings={settings}
+          onChange={updateSettings}
+          onClose={() => setSettingsOpen(false)}
+          onReset={resetSettings}
+        />
+      )}
     </main>
   );
 }

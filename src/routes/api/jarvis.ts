@@ -36,7 +36,11 @@ export const Route = createFileRoute("/api/jarvis")({
           );
         }
 
-        let body: { messages?: ChatMessage[]; locale?: "hi-IN" | "en-IN" };
+        let body: {
+          messages?: ChatMessage[];
+          locale?: "hi-IN" | "en-IN";
+          personality?: "classic" | "friendly" | "formal" | "witty" | "hype";
+        };
         try {
           body = await request.json();
         } catch {
@@ -60,6 +64,14 @@ export const Route = createFileRoute("/api/jarvis")({
             ? "Voice mode is Haryanvi/Hindi. Reply in natural, concise Haryanvi using Devanagari unless the user clearly requests another language."
             : "Voice mode is English. Reply in concise natural English unless the user requests another language.";
 
+        const personalityInstruction = {
+          classic: "Personality mode: calm, precise, composed JARVIS.",
+          friendly: "Personality mode: warm, casual, and helpful.",
+          formal: "Personality mode: strictly professional and brief.",
+          witty: "Personality mode: concise with occasional dry humour.",
+          hype: "Personality mode: energetic and motivating without becoming verbose.",
+        }[body.personality ?? "classic"];
+
         const callGemini = (withSearch: boolean) =>
           fetch(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
@@ -74,8 +86,8 @@ export const Route = createFileRoute("/api/jarvis")({
                   parts: [
                     {
                       text: withSearch
-                        ? `${SYSTEM_PROMPT}\n${languageInstruction}`
-                        : `${SYSTEM_PROMPT}\n${languageInstruction}\nYou have no search tool in this conversation. Never attempt to call one. Answer from your own knowledge, and if the answer may have changed recently, say so briefly.`,
+                        ? `${SYSTEM_PROMPT}\n${languageInstruction}\n${personalityInstruction}`
+                        : `${SYSTEM_PROMPT}\n${languageInstruction}\n${personalityInstruction}\nYou have no search tool in this conversation. Never attempt to call one. Answer from your own knowledge, and if the answer may have changed recently, say so briefly.`,
                     },
                   ],
                 },
