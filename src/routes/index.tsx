@@ -498,10 +498,12 @@ function Jarvis() {
             <HudPanel title="VOICE COMMANDS">
               <ul className="space-y-1 text-[0.65rem] tracking-[0.15em] text-muted-foreground">
                 <li>&gt; यूट्यूब खोल दे</li>
-                <li>&gt; गाना चला दे</li>
-                <li>&gt; आज मौसम के सै</li>
-                <li>&gt; व्हाट्सऐप खोल</li>
-                <li>&gt; तू के कर सके सै</li>
+                <li>&gt; यूट्यूब पे भजन सर्च कर</li>
+                <li>&gt; गूगल पे मौसम सर्च कर</li>
+                <li>&gt; व्हाट्सऐप पे 98XXXXXXXX को मैसेज भेज नमस्ते</li>
+                <li>&gt; अमेज़न पे जूते ढूंढ</li>
+                <li>&gt; मैप पे पेट्रोल पंप ढूंढ</li>
+
                 <li>&gt; fullscreen / फुल स्क्रीन</li>
                 <li>&gt; battery / बैटरी</li>
                 <li>&gt; vibrate / वाइब्रेट</li>
