@@ -1,0 +1,385 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { HudPanel } from "@/components/jarvis/HudPanel";
+import { useSpeechInput } from "@/hooks/use-speech";
+import {
+  deleteSite,
+  generateSite,
+  getMySite,
+  listMySites,
+  saveSite,
+  setPublished,
+} from "@/lib/forge.functions";
+
+export const Route = createFileRoute("/_authenticated/forge")({
+  head: () => ({
+    meta: [
+      { title: "SITE FORGE — Build & publish websites with J.A.R.V.I.S." },
+      {
+        name: "description",
+        content:
+          "Describe a website by voice or text and J.A.R.V.I.S. builds it, previews it and publishes it on a live link.",
+      },
+      { property: "og:title", content: "SITE FORGE — Build & publish with J.A.R.V.I.S." },
+      {
+        property: "og:description",
+        content: "Speak a website into existence and publish it on a live link.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Forge,
+});
+
+type SiteRow = {
+  id: string;
+  slug: string;
+  title: string;
+  published: boolean;
+  updated_at: string;
+  prompt: string;
+};
+
+function Forge() {
+  const navigate = useNavigate();
+  const generate = useServerFn(generateSite);
+  const list = useServerFn(listMySites);
+  const load = useServerFn(getMySite);
+  const save = useServerFn(saveSite);
+  const publish = useServerFn(setPublished);
+  const remove = useServerFn(deleteSite);
+
+  const [prompt, setPrompt] = useState("");
+  const [html, setHtml] = useState("");
+  const [title, setTitle] = useState("");
+  const [current, setCurrent] = useState<{ id: string; slug: string; published: boolean } | null>(
+    null,
+  );
+  const [sites, setSites] = useState<SiteRow[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setSites((await list()) as SiteRow[]);
+    } catch {
+      /* ignore */
+    }
+  }, [list]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const onVoice = useCallback((text: string) => setPrompt(text), []);
+  const { listening, interim, supported, start, stop } = useSpeechInput(onVoice, "hi-IN");
+
+  async function build() {
+    if (!prompt.trim()) return;
+    setBusy(html ? "UPDATING DESIGN..." : "FORGING SITE...");
+    setNote(null);
+    try {
+      const res = await generate({
+        data: html ? { prompt, currentHtml: html } : { prompt },
+      });
+      setHtml(res.html);
+      setTitle((t) => t || res.title);
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "Forge failed.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function store(published: boolean) {
+    if (!html) return;
+    setBusy(published ? "PUBLISHING..." : "SAVING...");
+    setNote(null);
+    try {
+      const row = await save({
+        data: {
+          ...(current ? { id: current.id } : {}),
+          title: title || "Untitled site",
+          html,
+          prompt,
+          published,
+        },
+      });
+      setCurrent(row as { id: string; slug: string; published: boolean });
+      setNote(
+        published
+          ? `LIVE: ${window.location.origin}/s/${(row as { slug: string }).slug}`
+          : "Saved to your vault.",
+      );
+      await refresh();
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function openSite(id: string) {
+    setBusy("LOADING...");
+    try {
+      const row = (await load({ data: { id } })) as {
+        id: string;
+        slug: string;
+        title: string;
+        html: string;
+        prompt: string;
+        published: boolean;
+      } | null;
+      if (!row) return;
+      setCurrent({ id: row.id, slug: row.slug, published: row.published });
+      setTitle(row.title);
+      setHtml(row.html);
+      setPrompt(row.prompt);
+      setNote(null);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function togglePublish(site: SiteRow) {
+    await publish({ data: { id: site.id, published: !site.published } });
+    await refresh();
+    if (current?.id === site.id) setCurrent({ ...current, published: !site.published });
+  }
+
+  async function drop(site: SiteRow) {
+    await remove({ data: { id: site.id } });
+    if (current?.id === site.id) {
+      setCurrent(null);
+      setHtml("");
+      setTitle("");
+    }
+    await refresh();
+  }
+
+  function newSite() {
+    setCurrent(null);
+    setHtml("");
+    setTitle("");
+    setPrompt("");
+    setNote(null);
+  }
+
+  function download() {
+    const blob = new Blob([html], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${title || "site"}.html`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    void navigate({ to: "/" });
+  }
+
+  return (
+    <main className="hud-bg hud-shell min-h-screen px-3 py-4 sm:px-6">
+      <div aria-hidden="true" className="telemetry-sweep" />
+      <header className="relative mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-primary/25 pb-3">
+        <div>
+          <span className="text-lg tracking-[0.45em] text-primary hud-glow">SITE FORGE</span>
+          <p className="text-[0.55rem] tracking-[0.3em] text-hud-dim">
+            DESCRIBE // FORGE // PUBLISH
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-none border-primary/50 text-[0.6rem] tracking-[0.25em] text-primary"
+          >
+            <Link to="/">← HUD</Link>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={newSite}
+            className="rounded-none border-border text-[0.6rem] tracking-[0.25em]"
+          >
+            NEW
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={signOut}
+            className="rounded-none border-border text-[0.6rem] tracking-[0.25em]"
+          >
+            SIGN OUT
+          </Button>
+        </div>
+      </header>
+
+      <div className="relative grid gap-4 lg:grid-cols-[21rem_minmax(0,1fr)]">
+        <div className="space-y-4">
+          <HudPanel title="BRIEF">
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={5}
+              placeholder="ek gym ka landing page banao — pricing, trainers, contact form"
+              aria-label="Describe the website"
+              className="w-full resize-y border border-primary/25 bg-transparent px-2 py-2 text-[0.78rem] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+            />
+            {interim && <p className="mt-1 text-[0.65rem] text-hud-dim">{interim}</p>}
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!supported}
+                onClick={listening ? stop : start}
+                className="rounded-none border-primary/50 text-[0.6rem] tracking-[0.2em] text-primary"
+              >
+                {listening ? "STOP" : "SPEAK"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!!busy}
+                onClick={build}
+                className="rounded-none border-accent text-[0.6rem] tracking-[0.2em] text-accent"
+              >
+                {html ? "UPDATE" : "FORGE"}
+              </Button>
+            </div>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="site name"
+              aria-label="Site name"
+              className="mt-2 w-full border border-primary/25 bg-transparent px-2 py-1.5 text-[0.75rem] outline-none focus:border-primary"
+            />
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!html || !!busy}
+                onClick={() => store(false)}
+                className="rounded-none border-border text-[0.6rem] tracking-[0.2em]"
+              >
+                SAVE
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!html || !!busy}
+                onClick={() => store(true)}
+                className="rounded-none border-accent bg-accent/10 text-[0.6rem] tracking-[0.2em] text-accent"
+              >
+                PUBLISH
+              </Button>
+            </div>
+            {html && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={download}
+                className="mt-2 w-full rounded-none border-border text-[0.6rem] tracking-[0.2em]"
+              >
+                DOWNLOAD HTML
+              </Button>
+            )}
+            {busy && <p className="mt-2 text-[0.65rem] tracking-[0.2em] text-accent">{busy}</p>}
+            {note && <p className="mt-2 break-all text-[0.68rem] text-primary">{note}</p>}
+            {current?.published && (
+              <a
+                href={`/s/${current.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block border border-accent bg-accent/15 px-3 py-1.5 text-[0.62rem] tracking-[0.2em] text-accent"
+              >
+                ▶ OPEN LIVE SITE
+              </a>
+            )}
+          </HudPanel>
+
+          <HudPanel title="MY SITES">
+            {sites.length === 0 ? (
+              <p className="text-[0.65rem] tracking-[0.2em] text-muted-foreground">NO SITES YET</p>
+            ) : (
+              <ul className="space-y-2">
+                {sites.map((s) => (
+                  <li key={s.id} className="border border-primary/20 px-2 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openSite(s.id)}
+                        className="truncate text-left text-[0.7rem] text-primary"
+                      >
+                        {s.title}
+                      </button>
+                      <span
+                        className={`text-[0.55rem] tracking-[0.2em] ${s.published ? "text-signal" : "text-hud-dim"}`}
+                      >
+                        {s.published ? "● LIVE" : "○ DRAFT"}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[0.55rem] tracking-[0.2em]">
+                      <button
+                        type="button"
+                        onClick={() => togglePublish(s)}
+                        className="text-accent"
+                      >
+                        {s.published ? "UNPUBLISH" : "PUBLISH"}
+                      </button>
+                      {s.published && (
+                        <a
+                          href={`/s/${s.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary"
+                        >
+                          VIEW
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => drop(s)}
+                        className="text-muted-foreground"
+                      >
+                        DELETE
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </HudPanel>
+        </div>
+
+        <HudPanel title="LIVE PREVIEW">
+          {html ? (
+            <iframe
+              title="Site preview"
+              srcDoc={html}
+              sandbox="allow-scripts allow-popups allow-forms"
+              className="h-[34rem] w-full border border-primary/20 bg-white lg:h-[46rem]"
+            />
+          ) : (
+            <div className="flex h-[34rem] items-center justify-center text-center text-[0.7rem] tracking-[0.25em] text-hud-dim lg:h-[46rem]">
+              DESCRIBE A SITE AND HIT FORGE
+            </div>
+          )}
+        </HudPanel>
+      </div>
+    </main>
+  );
+}
