@@ -116,6 +116,12 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
+              "(function(s){s.dataset.zone='11932530',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))",
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
               "(function(s){s.dataset.zone='11932534',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))",
           }}
         />
