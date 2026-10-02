@@ -75,7 +75,6 @@ export type Database = {
     Functions: {
       consume_forge_credit: { Args: never; Returns: number }
       forge_credits_left: { Args: never; Returns: number }
-      refund_forge_credit: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
