@@ -270,16 +270,61 @@ function Forge() {
         </div>
       </header>
 
-      <div className="relative grid gap-4 lg:grid-cols-[21rem_minmax(0,1fr)]">
-        <div className="space-y-4">
-          <HudPanel title="BRIEF">
+      <div className="relative mb-3 grid grid-cols-2 gap-2 lg:hidden">
+        {(["chat", "preview"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`border px-3 py-2 text-[0.62rem] tracking-[0.3em] ${tab === t ? "border-accent bg-accent/15 text-accent" : "border-primary/30 text-hud-dim"}`}
+          >
+            {t === "chat" ? "CHAT" : "PREVIEW"}
+          </button>
+        ))}
+      </div>
+
+      <div className="relative grid gap-4 lg:grid-cols-[24rem_minmax(0,1fr)]">
+        <div className={`space-y-4 ${tab === "chat" ? "" : "hidden lg:block"}`}>
+          <HudPanel title="FORGE CHAT">
+            <div className="mb-2 flex items-center justify-between border-b border-primary/20 pb-2 text-[0.6rem] tracking-[0.25em]">
+              <span className="text-hud-dim">DAILY CREDITS</span>
+              <span className={credits === 0 ? "text-accent" : "text-signal"}>
+                {"■".repeat(credits ?? 5)}
+                {"□".repeat(5 - (credits ?? 5))} {credits ?? "…"}/5
+              </span>
+            </div>
+            <div className="max-h-[22rem] min-h-[12rem] space-y-2 overflow-y-auto pr-1">
+              {chat.map((m, i) => (
+                <div
+                  key={i}
+                  className={`text-[0.74rem] leading-relaxed ${m.role === "you" ? "ml-6 border border-accent/40 bg-accent/10 px-2 py-1.5 text-foreground" : "mr-4 text-primary"}`}
+                >
+                  <span className="mr-1 text-[0.55rem] tracking-[0.25em] text-hud-dim">
+                    {m.role === "you" ? "YOU:" : "JARVIS:"}
+                  </span>
+                  {m.text}
+                </div>
+              ))}
+              {busy && (
+                <p className="animate-pulse text-[0.65rem] tracking-[0.25em] text-accent">{busy}</p>
+              )}
+              <div ref={chatEnd} />
+            </div>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              rows={5}
-              placeholder="ek gym ka landing page banao — pricing, trainers, contact form"
-              aria-label="Describe the website"
-              className="w-full resize-y border border-primary/25 bg-transparent px-2 py-2 text-[0.78rem] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void build();
+                }
+              }}
+              rows={3}
+              placeholder={
+                html ? "badlav batao — jaise 'background kaala karo'" : "ek gym ki website banao — pricing, trainers, contact"
+              }
+              aria-label="Message the forge"
+              className="mt-2 w-full resize-none border border-primary/25 bg-transparent px-2 py-2 text-[0.78rem] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
             />
             {interim && <p className="mt-1 text-[0.65rem] text-hud-dim">{interim}</p>}
             <div className="mt-2 grid grid-cols-2 gap-2">
