@@ -562,6 +562,7 @@ function Jarvis() {
 
                 <li>&gt; fullscreen / फुल स्क्रीन</li>
                 <li>&gt; battery / बैटरी</li>
+                <li>&gt; 98XXXXXXXX पे कॉल कर / call 98XXXXXXXX</li>
                 <li>&gt; vibrate / वाइब्रेट</li>
                 <li>&gt; keep screen on</li>
               </ul>
