@@ -8,6 +8,20 @@
       "when": 1790071531516,
       "tag": "0000_create_forge_sites",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790937547591,
+      "tag": "0001_forge_daily_credits",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790937566682,
+      "tag": "0002_drop_forge_refund",
+      "breakpoints": true
     }
   ]
 }

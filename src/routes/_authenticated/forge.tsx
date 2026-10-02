@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useSpeechInput } from "@/hooks/use-speech";
 import {
   deleteSite,
   generateSite,
+  getForgeCredits,
   getMySite,
   listMySites,
   saveSite,
@@ -34,6 +35,8 @@ export const Route = createFileRoute("/_authenticated/forge")({
   }),
   component: Forge,
 });
+
+type ChatMsg = { role: "you" | "jarvis"; text: string };
 
 type SiteRow = {
   id: string;
@@ -75,21 +78,65 @@ function Forge() {
     void refresh();
   }, [refresh]);
 
+  const credit = useServerFn(getForgeCredits);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [chat, setChat] = useState<ChatMsg[]>([
+    {
+      role: "jarvis",
+      text: "Batao kaisi website chahiye — dukaan, portfolio, gym, kuch bhi. Main bana ke yahin dikha dunga. Baad mein 'colour badlo', 'pricing section jodo' jaise badlav bhi bol sakte ho.",
+    },
+  ]);
+  const [tab, setTab] = useState<"chat" | "preview">("chat");
+  const chatEnd = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    credit()
+      .then((r) => setCredits(r.credits))
+      .catch(() => undefined);
+  }, [credit]);
+
+  useEffect(() => {
+    chatEnd.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [chat, busy]);
+
   const onVoice = useCallback((text: string) => setPrompt(text), []);
   const { listening, interim, supported, start, stop } = useSpeechInput(onVoice, "hi-IN");
 
   async function build() {
-    if (!prompt.trim()) return;
-    setBusy(html ? "UPDATING DESIGN..." : "FORGING SITE...");
+    const ask = prompt.trim();
+    if (!ask || busy) return;
+    if (credits !== null && credits <= 0) {
+      setChat((c) => [
+        ...c,
+        { role: "jarvis", text: "Aaj ke 5 credits khatam ho gaye. Kal naye credits milenge." },
+      ]);
+      return;
+    }
+    const editing = !!html;
+    setChat((c) => [...c, { role: "you", text: ask }]);
+    setPrompt("");
+    setBusy(editing ? "UPDATING DESIGN..." : "FORGING SITE...");
     setNote(null);
     try {
       const res = await generate({
-        data: html ? { prompt, currentHtml: html } : { prompt },
+        data: editing ? { prompt: ask, currentHtml: html } : { prompt: ask },
       });
       setHtml(res.html);
       setTitle((t) => t || res.title);
+      setCredits(res.credits);
+      setChat((c) => [
+        ...c,
+        {
+          role: "jarvis",
+          text: `${editing ? "Badlav ho gaya" : `"${res.title}" taiyaar hai`}. Preview dekho — aur kuch badalna ho to bolo, ya SAVE / PUBLISH dabao. (${res.credits} credit bache)`,
+        },
+      ]);
+      if (typeof window !== "undefined" && window.innerWidth < 1024) setTab("preview");
     } catch (err) {
-      setNote(err instanceof Error ? err.message : "Forge failed.");
+      setChat((c) => [
+        ...c,
+        { role: "jarvis", text: err instanceof Error ? err.message : "Forge failed." },
+      ]);
     } finally {
       setBusy(null);
     }
@@ -223,16 +270,61 @@ function Forge() {
         </div>
       </header>
 
-      <div className="relative grid gap-4 lg:grid-cols-[21rem_minmax(0,1fr)]">
-        <div className="space-y-4">
-          <HudPanel title="BRIEF">
+      <div className="relative mb-3 grid grid-cols-2 gap-2 lg:hidden">
+        {(["chat", "preview"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`border px-3 py-2 text-[0.62rem] tracking-[0.3em] ${tab === t ? "border-accent bg-accent/15 text-accent" : "border-primary/30 text-hud-dim"}`}
+          >
+            {t === "chat" ? "CHAT" : "PREVIEW"}
+          </button>
+        ))}
+      </div>
+
+      <div className="relative grid gap-4 lg:grid-cols-[24rem_minmax(0,1fr)]">
+        <div className={`space-y-4 ${tab === "chat" ? "" : "hidden lg:block"}`}>
+          <HudPanel title="FORGE CHAT">
+            <div className="mb-2 flex items-center justify-between border-b border-primary/20 pb-2 text-[0.6rem] tracking-[0.25em]">
+              <span className="text-hud-dim">DAILY CREDITS</span>
+              <span className={credits === 0 ? "text-accent" : "text-signal"}>
+                {"■".repeat(credits ?? 5)}
+                {"□".repeat(5 - (credits ?? 5))} {credits ?? "…"}/5
+              </span>
+            </div>
+            <div className="max-h-[22rem] min-h-[12rem] space-y-2 overflow-y-auto pr-1">
+              {chat.map((m, i) => (
+                <div
+                  key={i}
+                  className={`text-[0.74rem] leading-relaxed ${m.role === "you" ? "ml-6 border border-accent/40 bg-accent/10 px-2 py-1.5 text-foreground" : "mr-4 text-primary"}`}
+                >
+                  <span className="mr-1 text-[0.55rem] tracking-[0.25em] text-hud-dim">
+                    {m.role === "you" ? "YOU:" : "JARVIS:"}
+                  </span>
+                  {m.text}
+                </div>
+              ))}
+              {busy && (
+                <p className="animate-pulse text-[0.65rem] tracking-[0.25em] text-accent">{busy}</p>
+              )}
+              <div ref={chatEnd} />
+            </div>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              rows={5}
-              placeholder="ek gym ka landing page banao — pricing, trainers, contact form"
-              aria-label="Describe the website"
-              className="w-full resize-y border border-primary/25 bg-transparent px-2 py-2 text-[0.78rem] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void build();
+                }
+              }}
+              rows={3}
+              placeholder={
+                html ? "badlav batao — jaise 'background kaala karo'" : "ek gym ki website banao — pricing, trainers, contact"
+              }
+              aria-label="Message the forge"
+              className="mt-2 w-full resize-none border border-primary/25 bg-transparent px-2 py-2 text-[0.78rem] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
             />
             {interim && <p className="mt-1 text-[0.65rem] text-hud-dim">{interim}</p>}
             <div className="mt-2 grid grid-cols-2 gap-2">

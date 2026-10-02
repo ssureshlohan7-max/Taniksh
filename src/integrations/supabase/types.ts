@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      forge_credits: {
+        Row: {
+          day: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          day?: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          day?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       sites: {
         Row: {
           created_at: string
@@ -55,7 +73,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      consume_forge_credit: { Args: never; Returns: number }
+      forge_credits_left: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
