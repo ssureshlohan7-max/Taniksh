@@ -246,6 +246,23 @@ export function resolveLocalCommand(raw: string): LocalResult {
   const urlMatch = raw.match(/https?:\/\/\S+/i);
   if (urlMatch?.[0]) return { kind: "open", url: urlMatch[0], spoken: "Opening it now, sir." };
 
+  // phone call → opens the device dialer with the number filled in
+  if (/\b(call|dial|phone)\b|कॉल|काल|फ़ोन|फोन|डायल/i.test(text)) {
+    const digits = raw
+      .replace(/[०-९]/g, (d) => String("०१२३४५६७८९".indexOf(d)))
+      .replace(/[^\d+]/g, "");
+    const num = digits.match(/\+?\d{3,13}/)?.[0];
+    if (num) {
+      return {
+        kind: "device",
+        spoken: `Calling ${num.split("").join(" ")}, sir.`,
+        run: async () => {
+          window.location.href = `tel:${num}`;
+        },
+      };
+    }
+  }
+
   // device controls
   if (/full ?screen|फुल ?स्क्रीन|पूरी स्क्रीन/i.test(text)) {
     return {
