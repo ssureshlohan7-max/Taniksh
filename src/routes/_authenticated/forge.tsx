@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useSpeechInput } from "@/hooks/use-speech";
 import {
   deleteSite,
   generateSite,
+  getForgeCredits,
   getMySite,
   listMySites,
   saveSite,
@@ -34,6 +35,8 @@ export const Route = createFileRoute("/_authenticated/forge")({
   }),
   component: Forge,
 });
+
+type ChatMsg = { role: "you" | "jarvis"; text: string };
 
 type SiteRow = {
   id: string;
@@ -75,21 +78,65 @@ function Forge() {
     void refresh();
   }, [refresh]);
 
+  const credit = useServerFn(getForgeCredits);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [chat, setChat] = useState<ChatMsg[]>([
+    {
+      role: "jarvis",
+      text: "Batao kaisi website chahiye — dukaan, portfolio, gym, kuch bhi. Main bana ke yahin dikha dunga. Baad mein 'colour badlo', 'pricing section jodo' jaise badlav bhi bol sakte ho.",
+    },
+  ]);
+  const [tab, setTab] = useState<"chat" | "preview">("chat");
+  const chatEnd = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    credit()
+      .then((r) => setCredits(r.credits))
+      .catch(() => undefined);
+  }, [credit]);
+
+  useEffect(() => {
+    chatEnd.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [chat, busy]);
+
   const onVoice = useCallback((text: string) => setPrompt(text), []);
   const { listening, interim, supported, start, stop } = useSpeechInput(onVoice, "hi-IN");
 
   async function build() {
-    if (!prompt.trim()) return;
-    setBusy(html ? "UPDATING DESIGN..." : "FORGING SITE...");
+    const ask = prompt.trim();
+    if (!ask || busy) return;
+    if (credits !== null && credits <= 0) {
+      setChat((c) => [
+        ...c,
+        { role: "jarvis", text: "Aaj ke 5 credits khatam ho gaye. Kal naye credits milenge." },
+      ]);
+      return;
+    }
+    const editing = !!html;
+    setChat((c) => [...c, { role: "you", text: ask }]);
+    setPrompt("");
+    setBusy(editing ? "UPDATING DESIGN..." : "FORGING SITE...");
     setNote(null);
     try {
       const res = await generate({
-        data: html ? { prompt, currentHtml: html } : { prompt },
+        data: editing ? { prompt: ask, currentHtml: html } : { prompt: ask },
       });
       setHtml(res.html);
       setTitle((t) => t || res.title);
+      setCredits(res.credits);
+      setChat((c) => [
+        ...c,
+        {
+          role: "jarvis",
+          text: `${editing ? "Badlav ho gaya" : `"${res.title}" taiyaar hai`}. Preview dekho — aur kuch badalna ho to bolo, ya SAVE / PUBLISH dabao. (${res.credits} credit bache)`,
+        },
+      ]);
+      if (typeof window !== "undefined" && window.innerWidth < 1024) setTab("preview");
     } catch (err) {
-      setNote(err instanceof Error ? err.message : "Forge failed.");
+      setChat((c) => [
+        ...c,
+        { role: "jarvis", text: err instanceof Error ? err.message : "Forge failed." },
+      ]);
     } finally {
       setBusy(null);
     }
