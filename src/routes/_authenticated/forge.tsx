@@ -226,11 +226,10 @@ function Forge() {
         <div className="flex flex-wrap gap-2">
           <Button
             asChild
-            variant="outline"
             size="sm"
-            className="rounded-none border-primary/50 text-[0.6rem] tracking-[0.25em] text-primary"
+            className="rounded-none text-[0.65rem] tracking-[0.2em]"
           >
-            <Link to="/">← HUD</Link>
+            <Link to="/">← BACK TO AI ASSISTANT</Link>
           </Button>
           <Button
             type="button"
