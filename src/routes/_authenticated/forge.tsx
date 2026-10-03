@@ -346,7 +346,7 @@ function Forge() {
                 onClick={build}
                 className="rounded-none border-accent text-[0.6rem] tracking-[0.2em] text-accent"
               >
-                {html ? "UPDATE" : "FORGE"}
+                SEND ▶
               </Button>
             </div>
             <input
@@ -457,6 +457,7 @@ function Forge() {
           </HudPanel>
         </div>
 
+        <div className={tab === "preview" ? "" : "hidden lg:block"}>
         <HudPanel title="LIVE PREVIEW">
           {html ? (
             <iframe
@@ -467,10 +468,11 @@ function Forge() {
             />
           ) : (
             <div className="flex h-[34rem] items-center justify-center text-center text-[0.7rem] tracking-[0.25em] text-hud-dim lg:h-[46rem]">
-              DESCRIBE A SITE AND HIT FORGE
+              CHAT MEIN WEBSITE BATAO — YAHAN DIKHEGI
             </div>
           )}
         </HudPanel>
+        </div>
       </div>
     </main>
   );
