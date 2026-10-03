@@ -125,7 +125,7 @@ function AuthPage() {
             {mode === "in" ? "NEW USER? REGISTER" : "HAVE ACCESS? SIGN IN"}
           </button>
           <Link to="/" className="text-primary">
-            ← HUD
+            ← BACK TO AI ASSISTANT
           </Link>
         </div>
       </div>
