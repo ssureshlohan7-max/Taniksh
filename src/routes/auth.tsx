@@ -45,7 +45,7 @@ function AuthPage() {
           options: { emailRedirectTo: `${window.location.origin}/forge` },
         });
         if (error) throw error;
-        setNote("Account bana diya — email par confirmation link bheja gaya hai.");
+        setNote("Account created — check your email for the confirmation link.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -64,7 +64,7 @@ function AuthPage() {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      setNote("Google sign-in fail hua. Dobara try karein.");
+      setNote("Google sign-in failed. Please try again.");
       return;
     }
     if (result.redirected) return;

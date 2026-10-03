@@ -263,7 +263,7 @@ function Jarvis() {
           ...prev,
           { id: entryId++, role: "system", text: 'WAKE WORD DETECTED — LISTENING.' },
         ]);
-        speak(speechLocale === "hi-IN" ? "हाँ जी, बताओ।" : "Yes, sir?");
+        speak("Yes, sir?");
         start();
       }
     },
@@ -386,7 +386,7 @@ function Jarvis() {
                   onClick={() => setSpeechLocale("hi-IN")}
                   className="rounded-none text-[0.6rem] tracking-[0.15em]"
                 >
-                  हरियाणवी
+                  HARYANVI
                 </Button>
                 <Button
                   type="button"
@@ -559,22 +559,6 @@ function Jarvis() {
 
             <PhotoLab />
 
-            <HudPanel title="VOICE COMMANDS">
-              <ul className="space-y-1 text-[0.65rem] tracking-[0.15em] text-muted-foreground">
-                <li>&gt; यूट्यूब खोल दे</li>
-                <li>&gt; यूट्यूब पे भजन सर्च कर</li>
-                <li>&gt; गूगल पे मौसम सर्च कर</li>
-                <li>&gt; व्हाट्सऐप पे 98XXXXXXXX को मैसेज भेज नमस्ते</li>
-                <li>&gt; अमेज़न पे जूते ढूंढ</li>
-                <li>&gt; मैप पे पेट्रोल पंप ढूंढ</li>
-
-                <li>&gt; fullscreen / फुल स्क्रीन</li>
-                <li>&gt; battery / बैटरी</li>
-                <li>&gt; 98XXXXXXXX पे कॉल कर / call 98XXXXXXXX</li>
-                <li>&gt; vibrate / वाइब्रेट</li>
-                <li>&gt; keep screen on</li>
-              </ul>
-            </HudPanel>
 
             <HudPanel title="UPLINK">
               <div className="flex items-center justify-between text-[0.65rem] tracking-[0.2em] text-muted-foreground">
