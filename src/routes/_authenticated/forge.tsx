@@ -468,10 +468,11 @@ function Forge() {
             />
           ) : (
             <div className="flex h-[34rem] items-center justify-center text-center text-[0.7rem] tracking-[0.25em] text-hud-dim lg:h-[46rem]">
-              DESCRIBE A SITE AND HIT FORGE
+              CHAT MEIN WEBSITE BATAO — YAHAN DIKHEGI
             </div>
           )}
         </HudPanel>
+        </div>
       </div>
     </main>
   );
