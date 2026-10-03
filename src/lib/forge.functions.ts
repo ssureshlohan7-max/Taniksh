@@ -53,11 +53,7 @@ export const generateSite = createServerFn({ method: "POST" })
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) throw new Error("AI core offline.");
 
-    const { data: left } = await context.supabase.rpc("forge_credits_left");
-    if ((left ?? 0) <= 0) {
-      throw new Error("Aaj ke 5 credits khatam. Kal subah naye credits milenge.");
-    }
-
+    void context;
     const messages: { role: string; content: string }[] = [
       { role: "system", content: SYSTEM_PROMPT },
     ];
@@ -87,21 +83,10 @@ export const generateSite = createServerFn({ method: "POST" })
     const html = stripFences(raw);
     if (!/<html[\s>]/i.test(html)) throw new Error("Forge returned an invalid page. Try again.");
 
-    // only charge a credit when a site was actually delivered
-    const { data: remaining } = await context.supabase.rpc("consume_forge_credit");
-
     return {
       html,
       title: extractTitle(html, data.prompt.slice(0, 60)),
-      credits: Math.max(0, remaining ?? 0),
     };
-  });
-
-export const getForgeCredits = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("forge_credits_left");
-    return { credits: Math.max(0, data ?? 5), max: 5 };
   });
 
 export const listMySites = createServerFn({ method: "GET" })

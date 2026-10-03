@@ -8,7 +8,6 @@ import { useSpeechInput } from "@/hooks/use-speech";
 import {
   deleteSite,
   generateSite,
-  getForgeCredits,
   getMySite,
   listMySites,
   saveSite,
@@ -78,40 +77,25 @@ function Forge() {
     void refresh();
   }, [refresh]);
 
-  const credit = useServerFn(getForgeCredits);
-  const [credits, setCredits] = useState<number | null>(null);
   const [chat, setChat] = useState<ChatMsg[]>([
     {
       role: "jarvis",
-      text: "Batao kaisi website chahiye — dukaan, portfolio, gym, kuch bhi. Main bana ke yahin dikha dunga. Baad mein 'colour badlo', 'pricing section jodo' jaise badlav bhi bol sakte ho.",
+      text: "Tell me what kind of website you need — a shop, portfolio, gym, anything. I'll build it and show it here. Afterwards you can ask for changes like 'change the colours' or 'add a pricing section'.",
     },
   ]);
   const [tab, setTab] = useState<"chat" | "preview">("chat");
   const chatEnd = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    credit()
-      .then((r) => setCredits(r.credits))
-      .catch(() => undefined);
-  }, [credit]);
-
-  useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [chat, busy]);
 
   const onVoice = useCallback((text: string) => setPrompt(text), []);
-  const { listening, interim, supported, start, stop } = useSpeechInput(onVoice, "hi-IN");
+  const { listening, interim, supported, start, stop } = useSpeechInput(onVoice, "en-IN");
 
   async function build() {
     const ask = prompt.trim();
     if (!ask || busy) return;
-    if (credits !== null && credits <= 0) {
-      setChat((c) => [
-        ...c,
-        { role: "jarvis", text: "Aaj ke 5 credits khatam ho gaye. Kal naye credits milenge." },
-      ]);
-      return;
-    }
     const editing = !!html;
     setChat((c) => [...c, { role: "you", text: ask }]);
     setPrompt("");
@@ -123,12 +107,11 @@ function Forge() {
       });
       setHtml(res.html);
       setTitle((t) => t || res.title);
-      setCredits(res.credits);
       setChat((c) => [
         ...c,
         {
           role: "jarvis",
-          text: `${editing ? "Badlav ho gaya" : `"${res.title}" taiyaar hai`}. Preview dekho — aur kuch badalna ho to bolo, ya SAVE / PUBLISH dabao. (${res.credits} credit bache)`,
+          text: `${editing ? "Changes applied" : `"${res.title}" is ready`}. Check the preview — tell me anything else to change, or press SAVE / PUBLISH.`,
         },
       ]);
       if (typeof window !== "undefined" && window.innerWidth < 1024) setTab("preview");
@@ -286,13 +269,6 @@ function Forge() {
       <div className="relative grid gap-4 lg:grid-cols-[24rem_minmax(0,1fr)]">
         <div className={`space-y-4 ${tab === "chat" ? "" : "hidden lg:block"}`}>
           <HudPanel title="FORGE CHAT">
-            <div className="mb-2 flex items-center justify-between border-b border-primary/20 pb-2 text-[0.6rem] tracking-[0.25em]">
-              <span className="text-hud-dim">DAILY CREDITS</span>
-              <span className={credits === 0 ? "text-accent" : "text-signal"}>
-                {"■".repeat(credits ?? 5)}
-                {"□".repeat(5 - (credits ?? 5))} {credits ?? "…"}/5
-              </span>
-            </div>
             <div className="max-h-[22rem] min-h-[12rem] space-y-2 overflow-y-auto pr-1">
               {chat.map((m, i) => (
                 <div
@@ -321,7 +297,7 @@ function Forge() {
               }}
               rows={3}
               placeholder={
-                html ? "badlav batao — jaise 'background kaala karo'" : "ek gym ki website banao — pricing, trainers, contact"
+                html ? "describe a change — e.g. 'make the background black'" : "build a gym website — pricing, trainers, contact"
               }
               aria-label="Message the forge"
               className="mt-2 w-full resize-none border border-primary/25 bg-transparent px-2 py-2 text-[0.78rem] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
