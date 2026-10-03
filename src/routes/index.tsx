@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
@@ -321,6 +321,14 @@ function Jarvis() {
               className="rounded-none border-primary/60 px-3 text-[0.6rem] tracking-[0.22em] text-primary"
             >
               SETTINGS
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="rounded-none border-accent bg-accent/10 px-3 text-[0.6rem] tracking-[0.22em] text-accent"
+            >
+              <Link to="/forge">WEBSITE BANAO</Link>
             </Button>
             <span className="hidden text-signal md:inline">MK.VII // ONLINE</span>
             <span>67.220.189.193</span>
