@@ -346,7 +346,7 @@ function Forge() {
                 onClick={build}
                 className="rounded-none border-accent text-[0.6rem] tracking-[0.2em] text-accent"
               >
-                {html ? "UPDATE" : "FORGE"}
+                SEND ▶
               </Button>
             </div>
             <input
@@ -457,6 +457,7 @@ function Forge() {
           </HudPanel>
         </div>
 
+        <div className={tab === "preview" ? "" : "hidden lg:block"}>
         <HudPanel title="LIVE PREVIEW">
           {html ? (
             <iframe
