@@ -76,7 +76,7 @@ function Jarvis() {
   const [thinking, setThinking] = useState(false);
   const [wakeOn, setWakeOn] = useState(false);
   const [status, setStatus] = useState("STANDBY");
-  const [speechLocale, setSpeechLocale] = useState<SpeechLocale>("hi-IN");
+  const [speechLocale, setSpeechLocale] = useState<SpeechLocale>("en-IN");
   const [settings, setSettings] = useState<JarvisSettings>(DEFAULT_SETTINGS);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [clock, setClock] = useState("--:--:--");

@@ -297,7 +297,7 @@ function Forge() {
               }}
               rows={3}
               placeholder={
-                html ? "badlav batao — jaise 'background kaala karo'" : "ek gym ki website banao — pricing, trainers, contact"
+                html ? "describe a change — e.g. 'make the background black'" : "build a gym website — pricing, trainers, contact"
               }
               aria-label="Message the forge"
               className="mt-2 w-full resize-none border border-primary/25 bg-transparent px-2 py-2 text-[0.78rem] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
