@@ -249,6 +249,18 @@
     border-top: 1px solid oklch(0.86 0.17 88 / 16%);
     border-right: 1px solid oklch(0.86 0.17 88 / 9%);
   }
+  &::before {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    left: 12px;
+    width: 64px;
+    height: 2px;
+    background: var(--color-primary);
+    box-shadow: 0 0 10px var(--color-primary);
+  }
+  backdrop-filter: blur(6px);
 }
 
 @utility hud-bg {
@@ -259,6 +271,39 @@
     linear-gradient(oklch(0.86 0.17 88 / 4%) 1px, transparent 1px),
     linear-gradient(90deg, oklch(0.86 0.17 88 / 4%) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+  animation: grid-drift 24s linear infinite;
+  position: relative;
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(180deg, transparent 0%, color-mix(in oklab, var(--color-primary) 10%, transparent) 50%, transparent 100%);
+    background-size: 100% 220px;
+    background-repeat: no-repeat;
+    animation: scan-beam 7s linear infinite;
+    mix-blend-mode: screen;
+  }
+}
+
+@keyframes grid-drift {
+  from { background-position: 0 0, 0 0, 0 0, 0 0; }
+  to { background-position: 0 0, 0 0, 0 48px, 48px 0; }
+}
+
+@keyframes scan-beam {
+  from { background-position: 0 -220px; }
+  to { background-position: 0 110vh; }
+}
+
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent) 60%, transparent); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+@utility live-pulse {
+  animation: live-pulse 1.4s ease-out infinite;
 }
 
 @utility tech-label {
@@ -267,7 +312,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .spin-slow, .spin-med, .spin-rev, .spin-rev-slow, .reactor, .telemetry-sweep {
+  .spin-slow, .spin-med, .spin-rev, .spin-rev-slow, .reactor, .telemetry-sweep, .hud-bg, .hud-bg::before, .live-pulse {
     animation: none;
   }
 }
