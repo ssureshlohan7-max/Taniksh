@@ -135,7 +135,7 @@ function RootComponent() {
     for (const zone of ["11932530", "11932534"]) {
       if (document.querySelector(`script[data-zone="${zone}"]`)) continue;
       const s = document.createElement("script");
-      s.dataset.zone = zone;
+      s.dataset['zone'] = zone;
       s.src = "https://al5sm.com/tag.min.js";
       document.body.appendChild(s);
     }
