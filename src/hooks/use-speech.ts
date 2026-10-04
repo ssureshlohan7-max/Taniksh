@@ -105,7 +105,10 @@ export function useWakeWord(
   active: boolean,
   onWake: (command: string) => void,
   language: SpeechLocale = "hi-IN",
+  requireWake = true,
 ) {
+  const requireRef = useRef(requireWake);
+  requireRef.current = requireWake;
   const [supported, setSupported] = useState(true);
   const [armed, setArmed] = useState(false);
   const recognitionRef = useRef<RecognitionLike | null>(null);
@@ -148,6 +151,10 @@ export function useWakeWord(
         const result = event.results[i];
         if (!result.isFinal) continue;
         const transcript: string = result[0].transcript ?? "";
+        if (!requireRef.current) {
+          if (transcript.trim()) callbackRef.current(transcript.trim());
+          continue;
+        }
         const match = transcript.match(WAKE_PATTERN);
         if (match) {
           const startIndex = match.index ?? 0;

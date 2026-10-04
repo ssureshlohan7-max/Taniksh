@@ -39,12 +39,16 @@ function AuthPage() {
     setNote(null);
     try {
       if (mode === "up") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/forge` },
         });
         if (error) throw error;
+        if (data.session) {
+          void navigate({ to: "/forge" });
+          return;
+        }
         setNote("Account created — check your email for the confirmation link.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
