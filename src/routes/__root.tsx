@@ -113,11 +113,6 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1612459588624758"
-          crossOrigin="anonymous"
-        />
       </head>
       <body>
         {children}
@@ -132,6 +127,14 @@ function RootComponent() {
 
   // Ad scripts mutate the page, so load them after hydration to avoid breaking React.
   useEffect(() => {
+    if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
+      const g = document.createElement("script");
+      g.async = true;
+      g.crossOrigin = "anonymous";
+      g.src =
+        "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1612459588624758";
+      document.head.appendChild(g);
+    }
     for (const zone of ["11932530", "11932534"]) {
       if (document.querySelector(`script[data-zone="${zone}"]`)) continue;
       const s = document.createElement("script");
