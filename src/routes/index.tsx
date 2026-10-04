@@ -69,12 +69,13 @@ function Jarvis() {
     {
       id: entryId++,
       role: "system",
-      text: 'SYSTEM ONLINE. PRESS WAKE, THEN SAY "HEY JARVIS" FOLLOWED BY A COMMAND.',
+      text: 'SYSTEM ONLINE. PRESS LIVE TALK TO SPEAK HANDS-FREE, OR WAKE TO USE "HEY JARVIS".',
     },
   ]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [wakeOn, setWakeOn] = useState(false);
+  const [liveOn, setLiveOn] = useState(false);
   const [status, setStatus] = useState("STANDBY");
   const [speechLocale, setSpeechLocale] = useState<SpeechLocale>("en-IN");
   const [settings, setSettings] = useState<JarvisSettings>(DEFAULT_SETTINGS);
@@ -274,6 +275,18 @@ function Jarvis() {
     onWake,
     speechLocale,
   );
+  const onLive = useCallback(
+    (text: string) => {
+      void send(text);
+    },
+    [send],
+  );
+  const { armed: liveArmed } = useWakeWord(
+    liveOn && !speaking && !thinking && !listening,
+    onLive,
+    speechLocale,
+    false,
+  );
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
@@ -283,8 +296,8 @@ function Jarvis() {
     if (listening) setStatus("LISTENING");
     else if (speaking) setStatus("SPEAKING");
     else if (!thinking)
-      setStatus((s) => (s === "ERROR" ? s : wakeArmed ? "AWAITING WAKE WORD" : "STANDBY"));
-  }, [listening, speaking, thinking, wakeArmed]);
+      setStatus((s) => (s === "ERROR" ? s : liveArmed ? "LIVE — JUST SPEAK" : wakeArmed ? "AWAITING WAKE WORD" : "STANDBY"));
+  }, [listening, speaking, thinking, wakeArmed, liveArmed]);
 
   const active = listening || thinking || speaking;
   const today = new Date();
@@ -449,7 +462,10 @@ function Jarvis() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setWakeOn((v) => !v)}
+                  onClick={() => {
+                    setLiveOn(false);
+                    setWakeOn((v) => !v);
+                  }}
                   disabled={!wakeSupported}
                   className={`flex-1 rounded-none px-5 text-xs tracking-[0.25em] sm:flex-none ${
                     wakeOn
@@ -458,6 +474,23 @@ function Jarvis() {
                   }`}
                 >
                   {wakeOn ? "WAKE ON" : "WAKE"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setWakeOn(false);
+                    setLiveOn((v) => !v);
+                  }}
+                  disabled={!wakeSupported}
+                  className={`flex-1 rounded-none px-5 text-xs tracking-[0.25em] sm:flex-none ${
+                    liveOn
+                      ? "live-pulse border-accent bg-accent/20 text-accent"
+                      : "border-primary/60 text-primary"
+                  }`}
+                >
+                  {liveOn ? "● LIVE ON" : "LIVE TALK"}
                 </Button>
                 <Button
                   type="submit"
