@@ -35,7 +35,13 @@ function stripFences(text: string) {
 
 function extractTitle(html: string, fallback: string) {
   const m = html.match(/<title>([\s\S]*?)<\/title>/i);
-  const t = m?.[1]?.trim();
+  const t = m?.[1]
+    ?.replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .trim();
   return t && t.length > 0 ? t.slice(0, 120) : fallback;
 }
 
@@ -230,5 +236,35 @@ export const getPublicSite = createServerFn({ method: "GET" })
       .eq("published", true)
       .maybeSingle();
 
+    return row;
+  });
+
+export const setSlug = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string; slug: string }) => {
+    const slug = String(data.slug ?? "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+    if (slug.length < 3 || slug.length > 60) {
+      throw new Error("Address must be 3–60 letters, numbers or dashes.");
+    }
+    return { id: String(data.id), slug };
+  })
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("sites")
+      .update({ slug: data.slug })
+      .eq("id", data.id)
+      .eq("owner_id", context.userId)
+      .select("id, slug, published")
+      .maybeSingle();
+    if (error) {
+      if (error.message.includes("duplicate")) throw new Error("That address is taken. Try another.");
+      throw new Error(error.message);
+    }
+    if (!row) throw new Error("Site not found.");
     return row;
   });
