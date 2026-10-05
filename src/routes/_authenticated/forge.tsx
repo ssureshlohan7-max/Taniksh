@@ -11,6 +11,7 @@ import {
   getMySite,
   listMySites,
   saveSite,
+  setSlug,
   setPublished,
 } from "@/lib/forge.functions";
 
@@ -46,7 +47,34 @@ type SiteRow = {
   prompt: string;
 };
 
+const LIVE_ORIGIN = "https://taniksh.lovable.app";
+const liveUrl = (slug: string) => `${LIVE_ORIGIN}/s/${slug}`;
+
 function Forge() {
+  const renameSlug = useServerFn(setSlug);
+  const [slugDraft, setSlugDraft] = useState("");
+  const [copied, setCopied] = useState(false);
+  async function copyLink(slug: string) {
+    try {
+      await navigator.clipboard.writeText(liveUrl(slug));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setNote(liveUrl(slug));
+    }
+  }
+  async function shareLink(slug: string, name: string) {
+    const url = liveUrl(slug);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: name, url });
+        return;
+      } catch {
+        /* cancelled */
+      }
+    }
+    await copyLink(slug);
+  }
   const navigate = useNavigate();
   const generate = useServerFn(generateSite);
   const list = useServerFn(listMySites);
@@ -140,9 +168,10 @@ function Forge() {
         },
       });
       setCurrent(row as { id: string; slug: string; published: boolean });
+      setSlugDraft((row as { slug: string }).slug);
       setNote(
         published
-          ? `LIVE: ${window.location.origin}/s/${(row as { slug: string }).slug}`
+          ? `LIVE: ${liveUrl((row as { slug: string }).slug)}`
           : "Saved to your vault.",
       );
       await refresh();
@@ -168,8 +197,16 @@ function Forge() {
       setCurrent({ id: row.id, slug: row.slug, published: row.published });
       setTitle(row.title);
       setHtml(row.html);
-      setPrompt(row.prompt);
+      setPrompt("");
+      setSlugDraft(row.slug);
       setNote(null);
+      setChat((c) => [
+        ...c,
+        {
+          role: "jarvis",
+          text: `"${row.title}" is open. Tell me what to change and I'll update it, then press SAVE or PUBLISH.`,
+        },
+      ]);
     } finally {
       setBusy(null);
     }
@@ -196,6 +233,7 @@ function Forge() {
     setHtml("");
     setTitle("");
     setPrompt("");
+    setSlugDraft("");
     setNote(null);
   }
 
@@ -366,15 +404,76 @@ function Forge() {
             )}
             {busy && <p className="mt-2 text-[0.65rem] tracking-[0.2em] text-accent">{busy}</p>}
             {note && <p className="mt-2 break-all text-[0.68rem] text-primary">{note}</p>}
-            {current?.published && (
-              <a
-                href={`/s/${current.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-block border border-accent bg-accent/15 px-3 py-1.5 text-[0.62rem] tracking-[0.2em] text-accent"
-              >
-                ▶ OPEN LIVE SITE
-              </a>
+            {current && (
+              <div className="mt-3 space-y-2 border border-primary/25 p-2">
+                <p className="text-[0.55rem] tracking-[0.25em] text-hud-dim">WEBSITE ADDRESS</p>
+                <div className="flex items-center text-[0.68rem]">
+                  <span className="shrink-0 text-muted-foreground">taniksh.lovable.app/s/</span>
+                  <input
+                    value={slugDraft}
+                    onChange={(e) => setSlugDraft(e.target.value)}
+                    aria-label="Website address"
+                    className="min-w-0 flex-1 border-b border-primary/40 bg-transparent px-1 text-primary outline-none focus:border-primary"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!!busy || !slugDraft || slugDraft === current.slug}
+                  onClick={async () => {
+                    setNote(null);
+                    try {
+                      const row = await renameSlug({ data: { id: current.id, slug: slugDraft } });
+                      setCurrent(row);
+                      setSlugDraft(row.slug);
+                      setNote(`Address updated: ${liveUrl(row.slug)}`);
+                      await refresh();
+                    } catch (err) {
+                      setNote(err instanceof Error ? err.message : "Could not change address.");
+                    }
+                  }}
+                  className="w-full rounded-none border-primary/50 text-[0.6rem] tracking-[0.2em] text-primary"
+                >
+                  SAVE ADDRESS
+                </Button>
+                {current.published ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={liveUrl(current.slug)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border border-accent bg-accent/15 px-2 py-1.5 text-center text-[0.6rem] tracking-[0.2em] text-accent"
+                    >
+                      ▶ OPEN LIVE
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => copyLink(current.slug)}
+                      className="border border-primary/50 px-2 py-1.5 text-[0.6rem] tracking-[0.2em] text-primary"
+                    >
+                      {copied ? "✓ COPIED" : "COPY LINK"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => shareLink(current.slug, title || "My website")}
+                      className="border border-primary/50 px-2 py-1.5 text-[0.6rem] tracking-[0.2em] text-primary"
+                    >
+                      SHARE
+                    </button>
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(`${title || "My website"} — ${liveUrl(current.slug)}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border border-primary/50 px-2 py-1.5 text-center text-[0.6rem] tracking-[0.2em] text-primary"
+                    >
+                      WHATSAPP
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-[0.6rem] text-muted-foreground">Publish to get a shareable public link.</p>
+                )}
+              </div>
             )}
           </HudPanel>
 
@@ -409,13 +508,22 @@ function Forge() {
                       </button>
                       {s.published && (
                         <a
-                          href={`/s/${s.slug}`}
+                          href={liveUrl(s.slug)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary"
                         >
                           VIEW
                         </a>
+                      )}
+                      {s.published && (
+                        <button
+                          type="button"
+                          onClick={() => shareLink(s.slug, s.title)}
+                          className="text-primary"
+                        >
+                          SHARE
+                        </button>
                       )}
                       <button
                         type="button"
