@@ -35,7 +35,13 @@ function stripFences(text: string) {
 
 function extractTitle(html: string, fallback: string) {
   const m = html.match(/<title>([\s\S]*?)<\/title>/i);
-  const t = m?.[1]?.trim();
+  const t = m?.[1]
+    ?.replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .trim();
   return t && t.length > 0 ? t.slice(0, 120) : fallback;
 }
 
