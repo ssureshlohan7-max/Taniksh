@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteFooter } from "@/components/jarvis/SiteFooter";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArcReactor } from "@/components/jarvis/ArcReactor";
 import { HudPanel, Meter } from "@/components/jarvis/HudPanel";
