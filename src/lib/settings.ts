@@ -52,7 +52,7 @@ export const THEMES: Array<{ id: ThemeId; label: string; swatch: string; vars: R
   },
   {
     id: "cyan",
-    label: "ARC CYAN",
+    label: "ARC BLUE",
     swatch: "oklch(0.83 0.14 205)",
     vars: {
       "--background": "oklch(0.12 0.02 230)",
@@ -148,7 +148,7 @@ export const DEFAULT_SETTINGS: JarvisSettings = {
   name: "J.A.R.V.I.S",
   wakeWord: "jarvis",
   personality: "classic",
-  theme: "gold",
+  theme: "cyan",
   bgImage: null,
   bgDim: 70,
   voiceURI: null,
@@ -165,6 +165,11 @@ export function loadSettings(): JarvisSettings {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw) as Partial<JarvisSettings>;
+    // One-time switch of existing users to the new blue default theme.
+    if (!window.localStorage.getItem("jarvis.theme.blue")) {
+      window.localStorage.setItem("jarvis.theme.blue", "1");
+      parsed.theme = "cyan";
+    }
     return { ...DEFAULT_SETTINGS, ...parsed, shortcuts: parsed.shortcuts ?? [] };
   } catch {
     return DEFAULT_SETTINGS;

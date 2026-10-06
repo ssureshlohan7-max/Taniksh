@@ -47,37 +47,37 @@
   --radius: 0rem;
   --font-terminal: "Share Tech Mono", "IBM Plex Mono", ui-monospace, monospace;
 
-  --background: oklch(0.13 0.018 70);
-  --foreground: oklch(0.92 0.09 92);
-  --card: oklch(0.18 0.03 72);
-  --card-foreground: oklch(0.92 0.09 92);
-  --popover: oklch(0.18 0.03 72);
-  --popover-foreground: oklch(0.92 0.09 92);
-  --primary: oklch(0.85 0.17 88);
-  --primary-foreground: oklch(0.13 0.018 70);
-  --secondary: oklch(0.24 0.04 70);
-  --secondary-foreground: oklch(0.92 0.09 92);
-  --muted: oklch(0.22 0.035 70);
-  --muted-foreground: oklch(0.66 0.07 82);
-  --accent: oklch(0.63 0.21 32);
-  --accent-foreground: oklch(0.96 0.02 92);
-  --destructive: oklch(0.6 0.22 27);
-  --destructive-foreground: oklch(0.96 0.02 92);
-  --border: oklch(0.55 0.12 88 / 40%);
-  --input: oklch(0.55 0.12 88 / 40%);
-  --ring: oklch(0.85 0.17 88);
+  --background: oklch(0.13 0.018 215);
+  --foreground: oklch(0.92 0.09 215);
+  --card: oklch(0.18 0.03 215);
+  --card-foreground: oklch(0.92 0.09 215);
+  --popover: oklch(0.18 0.03 215);
+  --popover-foreground: oklch(0.92 0.09 215);
+  --primary: oklch(0.85 0.17 215);
+  --primary-foreground: oklch(0.13 0.018 215);
+  --secondary: oklch(0.24 0.04 215);
+  --secondary-foreground: oklch(0.92 0.09 215);
+  --muted: oklch(0.22 0.035 215);
+  --muted-foreground: oklch(0.66 0.07 215);
+  --accent: oklch(0.72 0.17 250);
+  --accent-foreground: oklch(0.96 0.02 215);
+  --destructive: oklch(0.6 0.22 250);
+  --destructive-foreground: oklch(0.96 0.02 215);
+  --border: oklch(0.55 0.12 215 / 40%);
+  --input: oklch(0.55 0.12 215 / 40%);
+  --ring: oklch(0.85 0.17 215);
 
-  --hud: oklch(0.86 0.17 88);
-  --hud-dim: oklch(0.58 0.08 80);
-  --signal: oklch(0.85 0.18 95);
-  --alert: oklch(0.65 0.21 32);
-  --panel-edge: oklch(0.76 0.15 83 / 72%);
-  --void: oklch(0.07 0.012 62);
+  --hud: oklch(0.86 0.17 215);
+  --hud-dim: oklch(0.58 0.08 215);
+  --signal: oklch(0.85 0.18 215);
+  --alert: oklch(0.65 0.21 250);
+  --panel-edge: oklch(0.76 0.15 215 / 72%);
+  --void: oklch(0.07 0.012 215);
 }
 
 .dark {
-  --background: oklch(0.13 0.018 70);
-  --foreground: oklch(0.92 0.09 92);
+  --background: oklch(0.13 0.018 215);
+  --foreground: oklch(0.92 0.09 215);
 }
 
 @layer base {
@@ -95,17 +95,17 @@
 
 @utility hud-glow {
   text-shadow:
-    0 0 6px oklch(0.86 0.17 88 / 55%),
-    0 0 18px oklch(0.86 0.17 88 / 25%);
+    0 0 6px oklch(0.86 0.17 215 / 55%),
+    0 0 18px oklch(0.86 0.17 215 / 25%);
 }
 
 @utility hud-frame {
   border: 1px solid var(--color-border);
   box-shadow:
-    inset 0 0 40px oklch(0.86 0.17 88 / 8%),
-    0 0 30px oklch(0.86 0.17 88 / 10%);
+    inset 0 0 40px oklch(0.86 0.17 215 / 8%),
+    0 0 30px oklch(0.86 0.17 215 / 10%);
   background:
-    radial-gradient(120% 90% at 50% 0%, oklch(0.22 0.04 70 / 70%), transparent 70%),
+    radial-gradient(120% 90% at 50% 0%, oklch(0.22 0.04 215 / 70%), transparent 70%),
     var(--color-background);
 }
 
@@ -118,7 +118,7 @@
     inset: 0;
     pointer-events: none;
     z-index: 20;
-    background: linear-gradient(90deg, transparent 0 49.8%, oklch(0.85 0.17 88 / 5%) 50%, transparent 50.2%);
+    background: linear-gradient(90deg, transparent 0 49.8%, oklch(0.85 0.17 215 / 5%) 50%, transparent 50.2%);
   }
   &::after {
     content: "";
@@ -126,14 +126,14 @@
     inset: 0;
     pointer-events: none;
     z-index: 21;
-    box-shadow: inset 0 0 110px oklch(0.03 0.01 70 / 92%);
+    box-shadow: inset 0 0 110px oklch(0.03 0.01 215 / 92%);
   }
 }
 
 @utility command-deck {
   position: relative;
   border-block: 1px solid var(--color-border);
-  background: linear-gradient(90deg, transparent, oklch(0.85 0.17 88 / 7%) 45%, transparent);
+  background: linear-gradient(90deg, transparent, oklch(0.85 0.17 215 / 7%) 45%, transparent);
   &::before,
   &::after {
     content: "";
@@ -168,8 +168,8 @@
 @utility scanlines {
   background-image: repeating-linear-gradient(
     to bottom,
-    oklch(0.86 0.17 88 / 5%) 0px,
-    oklch(0.86 0.17 88 / 5%) 1px,
+    oklch(0.86 0.17 215 / 5%) 0px,
+    oklch(0.86 0.17 215 / 5%) 1px,
     transparent 1px,
     transparent 4px
   );
@@ -229,16 +229,16 @@
 }
 
 @utility hud-drop {
-  filter: drop-shadow(0 0 6px oklch(0.86 0.17 88 / 45%));
+  filter: drop-shadow(0 0 6px oklch(0.86 0.17 215 / 45%));
 }
 
 @utility hud-panel {
   border: 1px solid var(--color-border);
   background:
-    linear-gradient(160deg, oklch(0.22 0.04 70 / 55%), oklch(0.13 0.02 65 / 45%));
+    linear-gradient(160deg, oklch(0.22 0.04 215 / 55%), oklch(0.13 0.02 215 / 45%));
   box-shadow:
-    inset 0 0 24px oklch(0.86 0.17 88 / 7%),
-    0 0 18px oklch(0.86 0.17 88 / 8%);
+    inset 0 0 24px oklch(0.86 0.17 215 / 7%),
+    0 0 18px oklch(0.86 0.17 215 / 8%);
   clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
   position: relative;
   &::after {
@@ -246,8 +246,8 @@
     position: absolute;
     pointer-events: none;
     inset: 5px;
-    border-top: 1px solid oklch(0.86 0.17 88 / 16%);
-    border-right: 1px solid oklch(0.86 0.17 88 / 9%);
+    border-top: 1px solid oklch(0.86 0.17 215 / 16%);
+    border-right: 1px solid oklch(0.86 0.17 215 / 9%);
   }
   &::before {
     content: "";
@@ -266,10 +266,10 @@
 @utility hud-bg {
   background-color: var(--background);
   background-image:
-    radial-gradient(60% 50% at 50% 32%, oklch(0.3 0.09 75 / 40%), transparent 70%),
-    radial-gradient(40% 40% at 8% 10%, oklch(0.26 0.07 60 / 25%), transparent 70%),
-    linear-gradient(oklch(0.86 0.17 88 / 4%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.86 0.17 88 / 4%) 1px, transparent 1px);
+    radial-gradient(60% 50% at 50% 32%, oklch(0.3 0.09 215 / 40%), transparent 70%),
+    radial-gradient(40% 40% at 8% 10%, oklch(0.26 0.07 215 / 25%), transparent 70%),
+    linear-gradient(oklch(0.86 0.17 215 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.86 0.17 215 / 4%) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
   animation: grid-drift 24s linear infinite;
   position: relative;
@@ -308,7 +308,7 @@
 
 @utility tech-label {
   border-left: 2px solid var(--color-primary);
-  background: linear-gradient(90deg, oklch(0.85 0.17 88 / 12%), transparent);
+  background: linear-gradient(90deg, oklch(0.85 0.17 215 / 12%), transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
