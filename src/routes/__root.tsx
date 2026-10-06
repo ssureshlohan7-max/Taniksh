@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -127,7 +128,10 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   // Ad scripts mutate the page, so load them after hydration to avoid breaking React.
+  const pathname = useRouterState({ select: (st) => st.location.pathname });
   useEffect(() => {
+    // Ads only on content pages — not on sign-in, the builder, or user-made sites.
+    if (/^\/(auth|forge|s\/)/.test(pathname)) return;
     if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
       const g = document.createElement("script");
       g.async = true;
@@ -143,7 +147,7 @@ function RootComponent() {
       s.src = "https://al5sm.com/tag.min.js";
       document.body.appendChild(s);
     }
-  }, []);
+  }, [pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>

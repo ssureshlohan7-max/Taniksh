@@ -82,7 +82,7 @@ export function PhotoLab() {
       <input
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder={file ? "make it a Mark 42 suit shot" : "generate: gold arc reactor"}
+        placeholder={file ? "make it a Mark 42 suit shot" : "generate: blue arc reactor"}
         aria-label="Photo edit instruction"
         className="mt-2 w-full border border-border bg-transparent px-2 py-1 text-[0.7rem] text-foreground outline-none placeholder:text-muted-foreground"
       />
