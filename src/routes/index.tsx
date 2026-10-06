@@ -606,6 +606,35 @@ function Jarvis() {
           </div>
         </div>
       </div>
+      <section className="relative z-10 mx-auto mt-10 max-w-4xl px-4 font-sans text-[0.92rem] leading-relaxed text-foreground/85">
+        <h2 className="mb-3 text-xl tracking-[0.2em] text-primary">YOUR FREE AI VOICE ASSISTANT IN THE BROWSER</h2>
+        <p className="mb-4">
+          J.A.R.V.I.S. is a voice assistant that runs right in your web browser — no app to install.
+          Ask questions and hear spoken answers, open and search websites like YouTube, Google, Maps
+          and Amazon by voice, draft WhatsApp messages, edit photos with AI, and build complete
+          websites just by describing them.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="hud-panel p-4">
+            <h3 className="mb-1 text-primary">Hands-free Live Talk</h3>
+            <p className="text-[0.85rem]">Press Live Talk once and just speak. Works in English and Haryanvi/Hindi.</p>
+          </div>
+          <div className="hud-panel p-4">
+            <h3 className="mb-1 text-primary">AI Photo Lab</h3>
+            <p className="text-[0.85rem]">Upload a photo and describe the change, or generate a new image from text.</p>
+          </div>
+          <div className="hud-panel p-4">
+            <h3 className="mb-1 text-primary">Site Forge</h3>
+            <p className="text-[0.85rem]">Describe a business and get a full website you can edit, publish and share.</p>
+          </div>
+        </div>
+        <p className="mt-4">
+          New here? Read our{" "}
+          <Link to="/guides" className="text-primary underline">step-by-step guides</Link> or learn{" "}
+          <Link to="/about" className="text-primary underline">about the project</Link>.
+        </p>
+      </section>
+      <SiteFooter />
       {settingsOpen && (
         <SettingsPanel
           settings={settings}

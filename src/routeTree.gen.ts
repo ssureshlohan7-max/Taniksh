@@ -19,6 +19,8 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedForgeRouteImport } from './routes/_authenticated/forge'
 import { Route as ApiJarvisRouteImport } from './routes/api/jarvis'
 import { Route as ApiPhotoRouteImport } from './routes/api/photo'
+import { Route as GuidesIndexRouteImport } from './routes/guides.index'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -70,6 +72,16 @@ const ApiPhotoRoute = ApiPhotoRouteImport.update({
   path: '/api/photo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesIndexRoute = GuidesIndexRouteImport.update({
+  id: '/guides/',
+  path: '/guides/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/guides/$slug',
+  path: '/guides/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SSlugRoute = SSlugRouteImport.update({
   id: '/s/$slug',
   path: '/s/$slug',
@@ -86,7 +98,9 @@ export interface FileRoutesByFullPath {
   '/forge': typeof AuthenticatedForgeRoute
   '/api/jarvis': typeof ApiJarvisRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/s/$slug': typeof SSlugRoute
+  '/guides/': typeof GuidesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -98,7 +112,9 @@ export interface FileRoutesByTo {
   '/forge': typeof AuthenticatedForgeRoute
   '/api/jarvis': typeof ApiJarvisRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/s/$slug': typeof SSlugRoute
+  '/guides': typeof GuidesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -112,7 +128,9 @@ export interface FileRoutesById {
   '/_authenticated/forge': typeof AuthenticatedForgeRoute
   '/api/jarvis': typeof ApiJarvisRoute
   '/api/photo': typeof ApiPhotoRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/s/$slug': typeof SSlugRoute
+  '/guides/': typeof GuidesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -126,7 +144,9 @@ export interface FileRouteTypes {
     | '/forge'
     | '/api/jarvis'
     | '/api/photo'
+    | '/guides/$slug'
     | '/s/$slug'
+    | '/guides/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -138,7 +158,9 @@ export interface FileRouteTypes {
     | '/forge'
     | '/api/jarvis'
     | '/api/photo'
+    | '/guides/$slug'
     | '/s/$slug'
+    | '/guides'
   id:
     | '__root__'
     | '/'
@@ -151,7 +173,9 @@ export interface FileRouteTypes {
     | '/_authenticated/forge'
     | '/api/jarvis'
     | '/api/photo'
+    | '/guides/$slug'
     | '/s/$slug'
+    | '/guides/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -164,7 +188,9 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiJarvisRoute: typeof ApiJarvisRoute
   ApiPhotoRoute: typeof ApiPhotoRoute
+  GuidesSlugRoute: typeof GuidesSlugRoute
   SSlugRoute: typeof SSlugRoute
+  GuidesIndexRoute: typeof GuidesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -239,6 +265,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPhotoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/': {
+      id: '/guides/'
+      path: '/guides'
+      fullPath: '/guides/'
+      preLoaderRoute: typeof GuidesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/guides/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$slug': {
       id: '/s/$slug'
       path: '/s/$slug'
@@ -270,7 +310,9 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiJarvisRoute: ApiJarvisRoute,
   ApiPhotoRoute: ApiPhotoRoute,
+  GuidesSlugRoute: GuidesSlugRoute,
   SSlugRoute: SSlugRoute,
+  GuidesIndexRoute: GuidesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
